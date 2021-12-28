@@ -10,6 +10,7 @@
     <PackageTags>Thunderbolt;ThunderboltIoc;roslyn;analyzers;code-generation;ioc;dependency-injection;di;inversion-of-control;aot</PackageTags>
     <RepositoryType>git</RepositoryType>
     <PackageIcon>images\thunderbolt_128.png</PackageIcon>
+    <PackageOutputPath>..\..\output_packages</PackageOutputPath>
   </PropertyGroup>
 
   <ItemGroup>
