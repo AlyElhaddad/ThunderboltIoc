@@ -6,6 +6,7 @@
     <Nullable>enable</Nullable>
     <LangVersion>10</LangVersion>
     <Description>The consumable APIs for ThunderboltIoc.</Description>
+    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
   </PropertyGroup>
 
 </Project>

@@ -7,12 +7,12 @@ internal static class Consts
     internal const string @public = "public";
     internal const string @override = "override";
 
-    internal const string IocContainerTypeFullName = $"{global}{mainNs}.IocContainer";
-    internal const string IIocRegistrarTypeFullName = $"{global}{mainNs}.IIocRegistrar";
+    internal const string IocContainerTypeFullName = $"{global}{mainNs}.ThunderboltContainer";
+    internal const string IIocRegistrarTypeFullName = $"{global}{mainNs}.IThunderboltRegistrar";
     internal const string RegisterMethodName = "Register";
 
-    internal const string includeAttrName = $"{global}{mainNs}.IocIncludeAttribute";
-    internal const string excludeAttrName = $"{global}{mainNs}.IocExcludeAttribute";
-    internal const string regexIncludeAttrName = $"{global}{mainNs}.RegexIncludeAttribute";
-    internal const string regexExcludeAttrName = $"{global}{mainNs}.RegexExcludeAttribute";
+    internal const string includeAttrName = $"{global}{mainNs}.ThunderboltIncludeAttribute";
+    internal const string excludeAttrName = $"{global}{mainNs}.ThunderboltExcludeAttribute";
+    internal const string regexIncludeAttrName = $"{global}{mainNs}.ThunderboltRegexIncludeAttribute";
+    internal const string regexExcludeAttrName = $"{global}{mainNs}.ThunderboltRegexExcludeAttribute";
 }

@@ -1,0 +1,18 @@
+<Project>
+  <PropertyGroup>
+    <Version>0.9</Version>
+    <Authors>Aly Elhaddad</Authors>
+    <Owners>Aly Elhaddad</Owners>
+    <PackageProjectUrl>https://github.com/AlyElhaddad/ThunderboltIoc</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/AlyElhaddad/ThunderboltIoc</RepositoryUrl>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+    <PackageTags>Thunderbolt;ThunderboltIoc;roslyn;analyzers;code-generation;ioc;dependency-injection;di;inversion-of-control;aot</PackageTags>
+    <RepositoryType>git</RepositoryType>
+    <PackageIcon>images\thunderbolt_128.png</PackageIcon>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="..\..\assets\thunderbolt_128.png" Pack="true" Visible="false" PackagePath="images\thunderbolt_128.png"/>
+  </ItemGroup>
+</Project>

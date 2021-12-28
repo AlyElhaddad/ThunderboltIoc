@@ -5,15 +5,15 @@ VisualStudioVersion = 17.0.32014.148
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ThunderboltIoc", "ThunderboltIoc\ThunderboltIoc.csproj", "{DC2A99B1-E9A9-4E1B-ABD5-2A915C6CAC36}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ThunderboltIoc.Abstractions", "ThunderboltIoc.Abstractions\ThunderboltIoc.Abstractions.csproj", "{0765CB8C-8F11-46EC-98CA-EC2675E41E68}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ThunderboltIoc.Abstractions", "ThunderboltIoc.Abstractions\ThunderboltIoc.Abstractions.csproj", "{0765CB8C-8F11-46EC-98CA-EC2675E41E68}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ThunderboltIoc.SourceGenerators", "ThunderboltIoc.SourceGenerators\ThunderboltIoc.SourceGenerators.csproj", "{3E14538F-2E83-4450-8CBC-BAFACD770BDE}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ThunderboltIoc.SourceGenerators", "ThunderboltIoc.SourceGenerators\ThunderboltIoc.SourceGenerators.csproj", "{3E14538F-2E83-4450-8CBC-BAFACD770BDE}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{07825FE5-1ADD-4E5F-AB96-9F82780F8CF1}"
 	ProjectSection(SolutionItems) = preProject
 		..\.gitattributes = ..\.gitattributes
 		..\.gitignore = ..\.gitignore
-		common.build.props = common.build.props
+		Directory.Build.Props = Directory.Build.Props
 	EndProjectSection
 EndProject
 Global

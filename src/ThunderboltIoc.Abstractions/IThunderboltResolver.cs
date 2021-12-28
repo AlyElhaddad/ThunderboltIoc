@@ -1,6 +1,6 @@
 ﻿namespace ThunderboltIoc;
 
-public interface IThunderboltResolver
+public interface IThunderboltResolver : IServiceProvider
 {
     T Get<T>();
 }

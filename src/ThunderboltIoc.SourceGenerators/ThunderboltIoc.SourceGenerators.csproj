@@ -6,11 +6,11 @@
     <Nullable>enable</Nullable>
     <LangVersion>10</LangVersion>
     <IsPackable>true</IsPackable>
-    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <NoPackageAnalysis>true</NoPackageAnalysis>
     <IsRoslynComponent>true</IsRoslynComponent>
     <SuppressDependenciesWhenPacking>true</SuppressDependenciesWhenPacking>
-    <Description>The source generator project used to analyze registrations and generate the necessary services' factories.</Description>
+    <Description>The source generator project used to analyze registrations and generate the necessary services' factories for ThunderboltIoc.</Description>
   </PropertyGroup>
   
   <ItemGroup>

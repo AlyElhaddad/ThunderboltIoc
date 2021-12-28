@@ -1,18 +1,22 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <LangVersion>10</LangVersion>
     <NuspecFile>ThunderboltIoc.nuspec</NuspecFile>
     <NuspecProperties>
       version=$(Version);
       authors=$(Authors);
       owners=$(Owners);
     </NuspecProperties>
+    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
   </PropertyGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\ThunderboltIoc.Abstractions\ThunderboltIoc.Abstractions.csproj" />
     <ProjectReference Include="..\ThunderboltIoc.SourceGenerators\ThunderboltIoc.SourceGenerators.csproj" />
   </ItemGroup>
-  
+
 </Project>
