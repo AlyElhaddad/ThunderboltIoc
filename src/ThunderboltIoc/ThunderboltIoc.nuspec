@@ -1,0 +1,26 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2013/05/nuspec.xsd">
+    <metadata>
+        <id>ThunderboltIoc</id>
+        <version>0.9</version>
+        <authors>Aly Elhaddad</authors>
+        <owners>Aly Elhaddad</owners>
+        <license type="expression">MIT</license>
+        <licenseUrl>https://licenses.nuget.org/MIT</licenseUrl>
+        <requireLicenseAcceptance>false</requireLicenseAcceptance>
+        <projectUrl>https://github.com/AlyElhaddad/ThunderboltIoc</projectUrl>
+        <repository type="git" url="https://github.com/AlyElhaddad/ThunderboltIoc" branch="master"/>
+        <description>A fully-fledged IoC that has zero reflection underneath the hood, that is based on roslyn and source generators.</description>
+        <tags>Thunderbolt ThunderboltIoc analyzers code-generation ioc dependency-injection inversion-of-control aot</tags>
+        <dependencies>
+            <group targetFramework=".NETStandard2.0">
+                <dependency id="ThunderboltIoc.SourceGenerators" version="$version$"
+                            exclude="build,compile,runtime,contentFiles,native" include='analyzers'/>
+                <dependency id="ThunderboltIoc.Abstractions" version="$version$" exclude="build,analyzers"/>
+            </group>
+        </dependencies>
+    </metadata>
+    <files>
+        <file src="**" exclude="**"/>
+    </files>
+</package>
