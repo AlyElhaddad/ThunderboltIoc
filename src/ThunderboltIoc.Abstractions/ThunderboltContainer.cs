@@ -19,7 +19,7 @@ public abstract partial class ThunderboltContainer : IThunderboltContainer, IThu
     }
 
     partial void StaticRegister(IThunderboltRegistrar reg);
-    public abstract void Register(IThunderboltRegistrar reg);
+    protected abstract void Register(IThunderboltRegistrar reg);
 
     IReadOnlyDictionary<Type, ThunderboltRegister> IThunderboltRegistry.Registers { get => registers; }
 

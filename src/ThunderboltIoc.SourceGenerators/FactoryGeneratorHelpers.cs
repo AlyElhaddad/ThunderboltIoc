@@ -25,7 +25,7 @@ internal static class FactoryGeneratorHelpers
         SemanticModel? semanticModel = null;
         return
             ContainerDescendantClassDeclarations(compilation)
-            .SelectMany(c => c.GetMethods(Consts.RegisterMethodName, Consts.@public, Consts.@override))
+            .SelectMany(c => c.GetMethods(Consts.RegisterMethodName, Consts.@protected, Consts.@override))
             .Where(m =>
             {
                 if (semanticModel is null)
