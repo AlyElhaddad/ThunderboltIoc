@@ -162,7 +162,7 @@ internal static class AttributeGeneratorHelpers
 
         string regSource = @$"namespace {Consts.mainNs};
 
-partial class IocContainer
+partial class {Consts.containerClass}
 {{
     partial void StaticRegister(IIocRegistrar reg)
     {{
@@ -174,7 +174,7 @@ partial class IocContainer
         string factories = string.Join(Environment.NewLine, includedTypes.Select(t => $"\t\t{FactoryGeneratorHelpers.GenerateTypeFactory(t.impl ?? t.type)}"));
         string factoriesSource = @$"namespace {Consts.mainNs};
 
-internal static partial class Factory
+internal static partial class {Consts.factoryClass}
 {{
     static partial void AddStaticFactories()
     {{

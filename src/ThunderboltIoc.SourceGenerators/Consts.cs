@@ -3,11 +3,13 @@
 internal static class Consts
 {
     internal const string mainNs = "ThunderboltIoc";
+    internal const string containerClass = "ThunderboltContainer";
+    internal const string factoryClass = "ThunderboltFactory";
     internal const string global = "global::";
     internal const string @protected = "protected";
     internal const string @override = "override";
 
-    internal const string IocContainerTypeFullName = $"{global}{mainNs}.ThunderboltContainer";
+    internal const string IocContainerTypeFullName = $"{global}{mainNs}.{containerClass}";
     internal const string IIocRegistrarTypeFullName = $"{global}{mainNs}.IThunderboltRegistrar";
     internal const string RegisterMethodName = "Register";
 

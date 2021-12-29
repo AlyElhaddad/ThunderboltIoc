@@ -145,7 +145,7 @@ internal static class FactoryGeneratorHelpers
         string factories = string.Join(Environment.NewLine, processedTypes.Select(t => $"\t\t{GenerateTypeFactory(t)}"));
         string source = @$"namespace {Consts.mainNs};
 
-internal static partial class Factory
+internal static partial class {Consts.factoryClass}
 {{
     static partial void AddFactories()
     {{
