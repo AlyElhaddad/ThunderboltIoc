@@ -1,6 +1,6 @@
 ﻿namespace ThunderboltIoc;
 
-public interface IThunderboltRegistry
+internal interface IThunderboltRegistry
 {
     IReadOnlyDictionary<Type, ThunderboltRegister> Registers { get; }
 }

@@ -2,8 +2,8 @@
 
 internal static class Consts
 {
-    internal const string mainNs = "ThunderboltIoc";
-    internal const string containerClass = "ThunderboltContainer";
+    internal const string mainNs = nameof(ThunderboltIoc);
+    internal const string containerClass = nameof(ThunderboltContainer);
     internal const string factoryClass = "ThunderboltFactory";
     internal const string global = "global::";
     internal const string @protected = "protected";

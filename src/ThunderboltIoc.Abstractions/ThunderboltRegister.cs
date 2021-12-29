@@ -1,6 +1,6 @@
 ﻿namespace ThunderboltIoc;
 
-public record ThunderboltRegister
+internal record ThunderboltRegister
 {
     private protected ThunderboltRegister(Type serviceType, Type? implType, ThunderboltServiceLifetime lifetime, Func<Type>? implSelector, Func<object>? factory)
     {
@@ -18,7 +18,7 @@ public record ThunderboltRegister
     public Func<object>? Factory { get; }
 }
 
-public record IocRegister<TService> : ThunderboltRegister
+internal record IocRegister<TService> : ThunderboltRegister
 {
 #pragma warning disable CS8603 // Possible null reference return.
     internal IocRegister(Type? implType, ThunderboltServiceLifetime lifetime, Func<Type>? implSelector, Func<TService>? factory)

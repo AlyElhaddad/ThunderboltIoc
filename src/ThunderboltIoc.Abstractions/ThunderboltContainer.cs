@@ -1,11 +1,12 @@
 ﻿namespace ThunderboltIoc;
 
-public abstract partial class ThunderboltContainer : IThunderboltContainer, IThunderboltRegistry, IThunderboltResolver, IThunderboltRegistrar, IServiceProvider
+public sealed class ThunderboltContainer : IThunderboltContainer, IThunderboltRegistry, IThunderboltResolver, IThunderboltRegistrar, IServiceProvider
 {
     private readonly Dictionary<Type, ThunderboltRegister> registers;
     private readonly ThunderboltScope singletonScope;
+    private readonly HashSet<Type> attachedRegistrations;
 
-    protected ThunderboltContainer()
+    internal ThunderboltContainer()
     {
         registers = new()
         {
@@ -14,12 +15,8 @@ public abstract partial class ThunderboltContainer : IThunderboltContainer, IThu
             { typeof(IThunderboltScope), new IocRegister<IThunderboltScope>(typeof(ThunderboltScope), ThunderboltServiceLifetime.Transient, null, factory: () => CreateScope()) },
         };
         singletonScope = new(this);
-        StaticRegister(this);
-        Register(this);
+        attachedRegistrations = new();
     }
-
-    partial void StaticRegister(IThunderboltRegistrar reg);
-    protected abstract void Register(IThunderboltRegistrar reg);
 
     IReadOnlyDictionary<Type, ThunderboltRegister> IThunderboltRegistry.Registers { get => registers; }
 
@@ -59,9 +56,23 @@ public abstract partial class ThunderboltContainer : IThunderboltContainer, IThu
     private static object Create(IThunderboltResolver iocResolver, ThunderboltRegister register)
     {
         if (register.Factory is not null) return register.Factory();
-        if (register.ImplSelector is not null) return ThunderboltFactory.Create(iocResolver, register.ImplSelector());
+        if (register.ImplSelector is not null) return ThunderboltFactory.Instance.Create(iocResolver, register.ImplSelector());
 
-        return ThunderboltFactory.Create(iocResolver, register.ImplType);
+        return ThunderboltFactory.Instance.Create(iocResolver, register.ImplType);
+    }
+
+    internal void Attach<TRegistration>()
+        where TRegistration : notnull, ThunderboltRegistration, new()
+    {
+        Type regType = typeof(TRegistration);
+        if (!attachedRegistrations.Add(regType))
+            throw new InvalidOperationException($"A registration of type '{regType}' has already been attached. Registrations of the same type must not be registered multiple times.");
+        TRegistration reg = new();
+        reg.StaticRegister(this);
+        reg.Register(this);
+        reg.DictateServiceFactories(ThunderboltFactory.Instance);
+        if (reg is IDisposable disposable)
+            disposable.Dispose();
     }
 
     #region IIocRegistrar

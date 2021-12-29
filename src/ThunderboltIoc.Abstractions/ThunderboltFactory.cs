@@ -1,24 +1,20 @@
 ﻿namespace ThunderboltIoc;
 
-internal static partial class ThunderboltFactory
+internal class ThunderboltFactory : IThunderboltFactoryDictator
 {
-    private class FactoriesDictionary : Dictionary<Type, Func<IThunderboltResolver, object>>
+    private readonly Dictionary<Type, Func<IThunderboltResolver, object>> serviceFactories;
+    private ThunderboltFactory()
     {
-        public new void Add(Type key, Func<IThunderboltResolver, object> value)
-        {
-            if (!ContainsKey(key))
-                base.Add(key, value);
-        }
+        serviceFactories = new();
     }
 
-    private static readonly FactoriesDictionary factories;
-    static ThunderboltFactory()
+    internal static readonly ThunderboltFactory Instance = new();
+
+    void IThunderboltFactoryDictator.Dictate(Type serviceType, Func<IThunderboltResolver, object> serviceFactory)
     {
-        factories = new();
-        AddStaticFactories();
-        AddFactories();
+        if (!serviceFactories.ContainsKey(serviceType))
+            serviceFactories.Add(serviceType, serviceFactory);
     }
-    static partial void AddStaticFactories();
-    static partial void AddFactories();
-    public static object Create(IThunderboltResolver resolver, Type type) => factories[type](resolver);
+
+    internal object Create(IThunderboltResolver resolver, Type type) => serviceFactories[type](resolver);
 }
