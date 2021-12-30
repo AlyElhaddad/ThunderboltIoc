@@ -11,7 +11,7 @@ internal static class FactoryGeneratorHelpers
 
     private static IEnumerable<ClassDeclarationSyntax> ContainerDescendantClassDeclarations(Compilation compilation)
     {
-        ITypeSymbol containerType = compilation.GetTypeByFullName(Consts.IocContainerTypeFullName) ?? throw new MissingMemberException(); //compilation.GetAllTypeMembers().Single(t => t.GetFullyQualifiedName() == IocContainerTypeFullName);
+        ITypeSymbol containerType = compilation.GetTypeByFullName(Consts.IocContainerTypeFullName) ?? throw new MissingMemberException();
         return
             compilation
             .SyntaxTrees
