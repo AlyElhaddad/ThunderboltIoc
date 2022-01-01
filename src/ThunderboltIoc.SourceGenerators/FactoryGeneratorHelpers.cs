@@ -132,7 +132,7 @@ internal static class FactoryGeneratorHelpers
                     GetDeclarationOverriddenRegisterMethod(declarations, registrarTypeSymbol),
                     registrarNonFactoryMethods);
             string factories = string.Join(Environment.NewLine, processedTypes.Select(t => $"\t\t\t{GenerateTypeFactory(t)}"));
-            string source = @$"namespace {Consts.mainNs}
+            string source = @$"namespace {symbol.ContainingNamespace.GetFullNamespaceName().RemovePrefix(Consts.global)}
 {{
     partial class {symbol.Name}
     {{

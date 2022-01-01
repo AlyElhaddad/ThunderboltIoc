@@ -153,35 +153,31 @@ internal static class AttributeGeneratorHelpers
     private static string GenerateRegistrations(IEnumerable<(INamedTypeSymbol type, INamedTypeSymbol? impl, int serviceLifetime)> regs)
     {
         return string.Join(Environment.NewLine,
-            regs.Select(reg => $"\t\treg.Add{(reg.serviceLifetime switch { 0 => "Singleton", 1 => "Scoped", 2 => "Transient", _ => throw new ArgumentException() })}<{reg.type.GetFullyQualifiedName()}{(reg.impl is null ? "" : $", {reg.impl.GetFullyQualifiedName()}")}>();"));
+            regs.Select(reg => $"\t\t\treg.Add{(reg.serviceLifetime switch { 0 => "Singleton", 1 => "Scoped", 2 => "Transient", _ => throw new ArgumentException() })}<{reg.type.GetFullyQualifiedName()}{(reg.impl is null ? "" : $", {reg.impl.GetFullyQualifiedName()}")}>();"));
     }
 
     internal static void GenerateRegisterStaticTypes(GeneratorExecutionContext context)
     {
+        if (context.SyntaxContextReceiver is not SyntaxContextReceiver syntaxContextReceiver)
+            return;
         var includedTypes = AllIncludedTypes(context.Compilation);
 
-        string regSource = @$"namespace {Consts.mainNs};
-
-partial class {Consts.containerClass}
+        foreach (var (symbol, declarations) in syntaxContextReceiver.RegistrationTypes)
+        {
+            string factories = string.Join(Environment.NewLine, includedTypes.Select(t => $"\t\t\t{FactoryGeneratorHelpers.GenerateTypeFactory(t.impl ?? t.type)}"));
+            string source = @$"namespace {symbol.ContainingNamespace.GetFullNamespaceName().RemovePrefix(Consts.global)}
 {{
-    partial void StaticRegister(IIocRegistrar reg)
+    partial class {symbol.Name}
     {{
-{GenerateRegistrations(includedTypes)}
-    }}
-}}";
-        context.AddSource("ThunderboltContainer.generated.cs", regSource);
-
-        string factories = string.Join(Environment.NewLine, includedTypes.Select(t => $"\t\t{FactoryGeneratorHelpers.GenerateTypeFactory(t.impl ?? t.type)}"));
-        string factoriesSource = @$"namespace {Consts.mainNs};
-
-internal static partial class {Consts.factoryClass}
-{{
-    static partial void AddStaticFactories()
-    {{
+        protected override void StaticRegister(IThunderboltRegistrar reg, IThunderboltFactoryDictator dictator)
+        {{
 {factories}
+
+{GenerateRegistrations(includedTypes)}
+        }}
     }}
 }}";
-        context.AddSource("Factory.static.generated.cs", factoriesSource);
-
+            context.AddSource($"{symbol.Name}.static.generated.cs", source);
+        }
     }
 }

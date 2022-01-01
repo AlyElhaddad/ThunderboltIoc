@@ -13,19 +13,19 @@ public class ContainerSourceGenerator : ISourceGenerator
 
     public void Initialize(GeneratorInitializationContext context)
     {
-        //this is for the purpose of debugging the source generator itself and can be ignored
-//#if DEBUG
-//        if (!System.Diagnostics.Debugger.IsAttached)
-//        {
-//            System.Diagnostics.Debugger.Launch();
-//        }
-//#endif
+        ////this is for the purpose of debugging the source generator itself and can be ignored
+        //#if DEBUG
+        //        if (!System.Diagnostics.Debugger.IsAttached)
+        //        {
+        //            System.Diagnostics.Debugger.Launch();
+        //        }
+        //#endif
         context.RegisterForSyntaxNotifications(() => new SyntaxContextReceiver());
     }
 
     public void Execute(GeneratorExecutionContext context)
     {
-        //        //this is for the purpose of debugging the source generator itself and can be ignored
+        ////this is for the purpose of debugging the source generator itself and can be ignored
         //#if DEBUG
         //        if (!System.Diagnostics.Debugger.IsAttached)
         //        {
@@ -33,13 +33,17 @@ public class ContainerSourceGenerator : ISourceGenerator
         //        }
         //#endif
 
-        if (RegistrarTypeSymbol is null)
+        if (RegistrarTypeSymbol is null || RegistrarNonFactoryMethods is null)
         {
             RegistrarTypeSymbol = context.Compilation.GetTypeByFullName(Consts.IIocRegistrarTypeFullName);
-            RegistrarNonFactoryMethods = new(RegistrarTypeSymbol?.GetMembers().OfType<IMethodSymbol>().Where(m => !m.Name.EndsWith(Consts.FactorySuffix)), SymbolEqualityComparer.Default);
+            RegistrarNonFactoryMethods = new(RegistrarTypeSymbol?.GetMembers().OfType<IMethodSymbol>().Where(m => !m.Name.EndsWith(Consts.FactorySuffix)) ?? Enumerable.Empty<IMethodSymbol>(), SymbolEqualityComparer.Default);
+            if (RegistrarTypeSymbol is null || RegistrarNonFactoryMethods is null)
+            {
+                return;
+            }
         }
 
-        //AttributeGeneratorHelpers.GenerateRegisterStaticTypes(context);
+        AttributeGeneratorHelpers.GenerateRegisterStaticTypes(context);
         FactoryGeneratorHelpers.GenerateAddFactoriesForRegisteredTypes(context, RegistrarTypeSymbol, RegistrarNonFactoryMethods);
     }
 }
