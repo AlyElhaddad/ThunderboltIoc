@@ -8,7 +8,8 @@ internal class ThunderboltFactory : IThunderboltFactoryDictator
         serviceFactories = new();
     }
 
-    internal static readonly ThunderboltFactory Instance = new();
+    private static ThunderboltFactory? instance;
+    internal static ThunderboltFactory Instance => instance ??= new();
 
     void IThunderboltFactoryDictator.Dictate(Type serviceType, Func<IThunderboltResolver, object> serviceFactory)
     {

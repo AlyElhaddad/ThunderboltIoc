@@ -2,6 +2,93 @@
 
 public sealed class ThunderboltContainer : IThunderboltContainer, IThunderboltRegistry, IThunderboltResolver, IThunderboltRegistrar, IServiceProvider
 {
+    private class RegisterIfNotExistsRegistrar<TReg> : IThunderboltRegistrar
+        where TReg : IThunderboltRegistrar, IThunderboltRegistry
+    {
+        private static RegisterIfNotExistsRegistrar<TReg>? instance;
+        public static RegisterIfNotExistsRegistrar<TReg> GetInstance(TReg reg) => instance ??= new(reg);
+
+
+        private readonly TReg reg;
+
+        private RegisterIfNotExistsRegistrar(TReg reg)
+        {
+            this.reg = reg;
+        }
+
+        public void AddTransient<TService>()
+        {
+            if (!reg.Registers.ContainsKey(typeof(TService)))
+                reg.AddTransient<TService>();
+        }
+
+        public void AddScoped<TService>()
+        {
+            if (!reg.Registers.ContainsKey(typeof(TService)))
+                reg.AddScoped<TService>();
+        }
+
+        public void AddSingleton<TService>()
+        {
+            if (!reg.Registers.ContainsKey(typeof(TService)))
+                reg.AddSingleton<TService>();
+        }
+
+        public void AddTransient<TService, TImpl>() where TImpl : TService
+        {
+            if (!reg.Registers.ContainsKey(typeof(TService)))
+                reg.AddTransient<TService, TImpl>();
+        }
+
+        public void AddScoped<TService, TImpl>() where TImpl : TService
+        {
+            if (!reg.Registers.ContainsKey(typeof(TService)))
+                reg.AddScoped<TService, TImpl>();
+        }
+
+        public void AddSingleton<TService, TImpl>() where TImpl : TService
+        {
+            if (!reg.Registers.ContainsKey(typeof(TService)))
+                reg.AddSingleton<TService, TImpl>();
+        }
+
+        public void AddTransientFactory<TService>(Func<TService> factory)
+        {
+            if (!reg.Registers.ContainsKey(typeof(TService)))
+                reg.AddTransientFactory(factory);
+        }
+
+        public void AddScopedFactory<TService>(Func<TService> factory)
+        {
+            if (!reg.Registers.ContainsKey(typeof(TService)))
+                reg.AddScopedFactory(factory);
+        }
+
+        public void AddSingletonFactory<TService>(Func<TService> factory)
+        {
+            if (!reg.Registers.ContainsKey(typeof(TService)))
+                reg.AddSingletonFactory(factory);
+        }
+
+        public void AddTransient<TService>(Func<Type> implSelector)
+        {
+            if (!reg.Registers.ContainsKey(typeof(TService)))
+                reg.AddTransient<TService>(implSelector);
+        }
+
+        public void AddScoped<TService>(Func<Type> implSelector)
+        {
+            if (!reg.Registers.ContainsKey(typeof(TService)))
+                reg.AddScoped<TService>(implSelector);
+        }
+
+        public void AddSingleton<TService>(Func<Type> implSelector)
+        {
+            if (!reg.Registers.ContainsKey(typeof(TService)))
+                reg.AddSingleton<TService>(implSelector);
+        }
+    }
+
     private readonly Dictionary<Type, ThunderboltRegister> registers;
     private readonly ThunderboltScope singletonScope;
     private readonly HashSet<Type> attachedRegistrations;
@@ -68,9 +155,9 @@ public sealed class ThunderboltContainer : IThunderboltContainer, IThunderboltRe
         if (!attachedRegistrations.Add(regType))
             throw new InvalidOperationException($"A registration of type '{regType}' has already been attached. Registrations of the same type must not be registered multiple times.");
         TRegistration reg = new();
-        reg.StaticRegister(this);
-        reg.Register(this);
+        reg.StaticRegister(RegisterIfNotExistsRegistrar<ThunderboltContainer>.GetInstance(this), ThunderboltFactory.Instance);
         reg.DictateServiceFactories(ThunderboltFactory.Instance);
+        reg.Register(this);
         if (reg is IDisposable disposable)
             disposable.Dispose();
     }

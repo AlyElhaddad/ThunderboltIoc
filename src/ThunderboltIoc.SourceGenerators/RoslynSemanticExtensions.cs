@@ -106,10 +106,10 @@ internal static class RoslynSemanticExtensions
         return false;
     }
 
-    public static ITypeSymbol? GetTypeByFullName(this Compilation compilation, string fullName)
+    public static INamedTypeSymbol? GetTypeByFullName(this Compilation compilation, string fullName)
     {
         SemanticModel semanticModel = compilation.GetSemanticModel(compilation.SyntaxTrees.First());
-        return semanticModel.GetSpeculativeTypeInfo(0, SyntaxFactory.ParseTypeName(fullName), SpeculativeBindingOption.BindAsTypeOrNamespace).Type;
+        return semanticModel.GetSpeculativeTypeInfo(0, SyntaxFactory.ParseTypeName(fullName), SpeculativeBindingOption.BindAsTypeOrNamespace).Type as INamedTypeSymbol;
     }
 
     public static IEnumerable<INamedTypeSymbol?> GetTypesByFullName(this Compilation compilation, params string[] fullNames)
