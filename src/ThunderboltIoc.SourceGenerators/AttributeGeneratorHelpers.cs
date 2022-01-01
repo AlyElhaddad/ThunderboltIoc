@@ -165,7 +165,8 @@ internal static class AttributeGeneratorHelpers
         foreach (var (symbol, declarations) in syntaxContextReceiver.RegistrationTypes)
         {
             string factories = string.Join(Environment.NewLine, includedTypes.Select(t => $"\t\t\t{FactoryGeneratorHelpers.GenerateTypeFactory(t.impl ?? t.type)}"));
-            string source = @$"namespace {symbol.ContainingNamespace.GetFullNamespaceName().RemovePrefix(Consts.global)}
+            string source = @$"using {Consts.global}{Consts.mainNs};
+namespace {symbol.ContainingNamespace.GetFullNamespaceName().RemovePrefix(Consts.global)}
 {{
     partial class {symbol.Name}
     {{

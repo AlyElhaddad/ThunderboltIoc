@@ -13,25 +13,25 @@ public class ContainerSourceGenerator : ISourceGenerator
 
     public void Initialize(GeneratorInitializationContext context)
     {
-        ////this is for the purpose of debugging the source generator itself and can be ignored
-        //#if DEBUG
-        //        if (!System.Diagnostics.Debugger.IsAttached)
-        //        {
-        //            System.Diagnostics.Debugger.Launch();
-        //        }
-        //#endif
+//        //this is for the purpose of debugging the source generator itself and can be ignored
+//#if DEBUG
+//        if (!System.Diagnostics.Debugger.IsAttached)
+//        {
+//            System.Diagnostics.Debugger.Launch();
+//        }
+//#endif
         context.RegisterForSyntaxNotifications(() => new SyntaxContextReceiver());
     }
 
     public void Execute(GeneratorExecutionContext context)
     {
-        ////this is for the purpose of debugging the source generator itself and can be ignored
-        //#if DEBUG
-        //        if (!System.Diagnostics.Debugger.IsAttached)
-        //        {
-        //            System.Diagnostics.Debugger.Launch();
-        //        }
-        //#endif
+//        //this is for the purpose of debugging the source generator itself and can be ignored
+//#if DEBUG
+//        if (!System.Diagnostics.Debugger.IsAttached)
+//        {
+//            System.Diagnostics.Debugger.Launch();
+//        }
+//#endif
 
         if (RegistrarTypeSymbol is null || RegistrarNonFactoryMethods is null)
         {

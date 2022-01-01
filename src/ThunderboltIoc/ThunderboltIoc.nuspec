@@ -2,7 +2,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2013/05/nuspec.xsd">
   <metadata>
     <id>ThunderboltIoc</id>
-    <version>0.9.4</version>
+    <version>0.9.5</version>
     <authors>Aly Elhaddad</authors>
     <owners>Aly Elhaddad</owners>
     <icon>images\thunderbolt_128.png</icon>

@@ -31,8 +31,11 @@ public class SyntaxContextReceiver : ISyntaxContextReceiver
             if (context.SemanticModel.GetSpeculativeTypeInfo(typeSyntax.SpanStart, typeSyntax, SpeculativeBindingOption.BindAsTypeOrNamespace).Type is INamedTypeSymbol regType
                 && SymbolEqualityComparer.Default.Equals(regType.ContainingAssembly, context.SemanticModel.Compilation.Assembly))
             {
-                IEnumerable<(ClassDeclarationSyntax decl, SemanticModel semantic)> declarations = regType.DeclaringSyntaxReferences.SelectMany(sr => sr.SyntaxTree.GetRoot().DescendantNodesAndSelf(sr.Span).Select(decl => (decl, context.SemanticModel.Compilation.GetSemanticModel(sr.SyntaxTree)))).OfType<(ClassDeclarationSyntax decl, SemanticModel semantic)>().Where(item => item.decl.Identifier.ValueText == regType.Name);
-                if (declarations.All(item => item.decl.Modifiers.Any(m => m.ValueText == Consts.partial)))
+                IEnumerable<(ClassDeclarationSyntax decl, SemanticModel semantic)> declarations
+                    = regType.DeclaringSyntaxReferences
+                    .SelectMany(sr => sr.SyntaxTree.GetRoot().DescendantNodesAndSelf(sr.Span).OfType<ClassDeclarationSyntax>().Select(decl => (decl, semanticModel: context.SemanticModel.Compilation.GetSemanticModel(sr.SyntaxTree))))
+                    .Where(item => item.decl.Identifier.ValueText == regType.Name);
+                if (declarations.Any() && declarations.All(item => item.decl.Modifiers.Any(m => m.ValueText == Consts.partial)))
                 {
                     registrationTypes.Add((regType, declarations));
                 }
