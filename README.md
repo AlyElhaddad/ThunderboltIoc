@@ -61,6 +61,8 @@ This is also registered as a singleton instance and returns an `IThunderboltCont
 - IThunderboltScope
 This is registered as a transient service, meaning, every time you try to resolve/get an `IThunderboltScope`, a new `IThunderboltScope` will be created. This is the same as `IThunderboltContainer.CreateScope()`.
 
+	It is worth mentioning that an `IThunderboltScope` is an `IDisposable`, however, that doesn&apos;t mean that disposing an `IThunderboltScope` would dispose scoped instances.
+
 ## 4.2. Explicit registration
 After you have created a **partial** class that inherits `ThunderboltRegistration`, you will have to override the abstract `void Register`. This method gives you a single argument of type `IThunderboltRegistrar` (`reg`), which you can use to register your services using the `Add{serviceLifetime}` methods.
 
@@ -172,3 +174,30 @@ All project types are inherently supported and your project wouldn&apos;t compla
 It is intended for ThunderboltIoc to integrate with `Microsoft.Extensions.DependencyInjection` in the future, but it the meantime, there would be no harm in using both frameworks together side-by-sidy; that however wouldn&apos;t let us fully benefit from ThunderboltIoc&apos;s superior performance all the time.
 
 It is perfectly safe to use ThunderboltIoc for any .Net C# project as a standalone IoC.
+
+# 7. Known limitations
+The only services for which code generation can work are services that have exactly one constructor that is public. It is planned to lift this restriction in future versions.
+
+# 8. Planned for future versions
+## 8.1. Lift the single public constructor restriction.
+As mentioned in the section above, it is feasible and desired to remove this limitation.
+## 8.2. Better source generation exceptional handling
+Currently, in the best-case scenario and if you follow the documentation, we shouldn&apos;t worry about source generation exceptions. However, upon failing to adhere to the documentation, it is possible that an unhandled exception might arise. In such a case, the source generator might (or might not) fail at the whole process. When that happens, it is possible that no code gets generated at all (you would get a notification in the build output but you might not notice it).
+
+It is planned to provide better exception handling so that failure to generate code for a particular service wouldn&apos;t cause the whole process to fail. It would also be nice to generate relevant warnings or errors.
+
+## 8.3. Verify no cyclic dependencies exist
+Currently, it is possible to fall into an infinite resolve operation where one (or more) service&apos;s dependencies may directly or indirectly depend on the same service.
+
+## 8.4. Analyzers
+It would be beneficial to have static code analyzers that show you warnings about failing to adhere to the best practices discussed in the documentation. For instance, generate a warning that tells you that a class you created that inherits `ThunderboltRegistration` does not have the **partial** modifier.
+
+## 8.5. Property Injection
+As is the case with any feature-rich IoC framework, property injection is a dependency injection style that is not currently supported by this framework.
+
+## 8.6. Automatic object disposal
+Disposing an `IThunderboltScope` should in turn dispose every `IDisposable` scoped service saved in the corresponding `IThunderboltScope`.
+
+## 8.7. Integration with Microsoft.Extensions.DependencyInjection
+The goal is to provide an intuitive API to effectively replace the default `IServiceProvider` of Microsoft&apos;s DI. Currently, `IThunderboltResolver` already implements `System.IServiceProvider` but no present elegant integration exists.
+
