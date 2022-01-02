@@ -1,4 +1,4 @@
-# 1. How to install
+# 1. Installation
 ThunderboltIoc&apos;s installation is a simple as installing the nuget to the target assemblies. No further configuration is needed. For the sake of registering your services, however, you&apos;re going to need to implement (i.e create a class that inherits) ThunderboltRegistration as a partial class in each project where you may want to register services.
 You may find the package at [Nuget.org](https://www.nuget.org/packages/ThunderboltIoc "Nuget.org"): 
 ```
