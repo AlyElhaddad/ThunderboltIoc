@@ -1,3 +1,17 @@
+One of the very first IoC frameworks for .Net that has zero reflection. An IoC that casts its services before thunder casts its bolts.
+
+The goal is to create a code-generation based IoC container for .Net. Almost all containers today rely on reflection to provide a functioning IoC, which is a costly operation. Regardless of the valued attempts to improve the performance of these containers over the years, these containers would not match the performance of a code-generation based IoC, if that could be achieved. It is quite irritating to witness the cost we pay for trying to clean our code by -among other things- using a reflection-based IoC framework and being able to do nothing about it. The idea is to let the user (the developer) write their code as they please, and let the IoC take care of code generation during compilation to provide a working and performant solution in the target assembly.
+
+I have finally managed to find the time to start working on the solution. Fortunately for me and for the community, I read about source generators in .Net before starting. Having watched the power of source-generators combined with the power of Roslyn, I decided to pick that path over other approaches such as T4 templates and CodeDom for code generation, and I&apos;m glad I made that choice. Mine might not be the first solution to follow this approach, but I like to think of it as the most powerful and flexible one to-date.
+
+Below is a documentation as well as a quick-start guide to walk you through the framework. If you like my work and are looking forward to supporting me and helping me to continue to improve it, you may do that by:
+- [Sponsoring me on Patreon.com](https://www.patreon.com/alyelhaddad "Sponsoring me on Patreon.com").
+- [One-time donations via Paypal](https://paypal.me/alyelhaddad "One-time donations via Paypal").
+
+I&apos;m also open to your suggestions. Feel free to contact me on twitter [@aly_elhaddad](https://twitter.com/aly_elhaddad "@aly_elhaddad")
+
+*p.s. the phrase &quot;if that could be achieved&quot; did exist in my original pretext in March 2021. Even though I managed to make this true today, I decided to keep it here as further motivation for the reader.*
+
 # 1. Installation
 ThunderboltIoc&apos;s installation is a simple as installing the nuget to the target assemblies. No further configuration is needed. For the sake of registering your services, however, you&apos;re going to need to implement (i.e create a class that inherits) ThunderboltRegistration as a partial class in each project where you may want to register services.
 You may find the package at [Nuget.org](https://www.nuget.org/packages/ThunderboltIoc "Nuget.org"): 
@@ -61,7 +75,7 @@ This is also registered as a singleton instance and returns an `IThunderboltCont
 - IThunderboltScope
 This is registered as a transient service, meaning, every time you try to resolve/get an `IThunderboltScope`, a new `IThunderboltScope` will be created. This is the same as `IThunderboltContainer.CreateScope()`.
 
-	It is worth mentioning that an `IThunderboltScope` is an `IDisposable`, however, that doesn&apos;t mean that disposing an `IThunderboltScope` would dispose scoped instances.
+	It is worth mentioning that an `IThunderboltScope` is an `IDisposable`, however, that doesn&apos;t mean that disposing an `IThunderboltScope` would dispose scoped instances (at least in the current release).
 
 ## 4.2. Explicit registration
 After you have created a **partial** class that inherits `ThunderboltRegistration`, you will have to override the abstract `void Register`. This method gives you a single argument of type `IThunderboltRegistrar` (`reg`), which you can use to register your services using the `Add{serviceLifetime}` methods.

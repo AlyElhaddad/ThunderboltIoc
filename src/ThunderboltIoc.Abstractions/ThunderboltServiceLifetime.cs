@@ -1,5 +1,8 @@
 ﻿namespace ThunderboltIoc;
 
+/// <summary>
+/// The different ThunderboltIoc service lifetime specifications.
+/// </summary>
 public enum ThunderboltServiceLifetime
 {
     /// <summary>

@@ -12,6 +12,7 @@
       owners=$(Owners);
     </NuspecProperties>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
 
   <ItemGroup>
