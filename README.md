@@ -1,10 +1,10 @@
-One of the very first IoC frameworks for .Net that has zero reflection. An IoC that casts its services before thunder casts its bolts.
+One of the very first IoC frameworks for .Net that has no reflection. An IoC that casts its services before thunder casts its bolts :smile:
 
 The goal is to create a code-generation based IoC container for .Net. Almost all containers today rely on reflection to provide a functioning IoC, which is a costly operation. Regardless of the valued attempts to improve the performance of these containers over the years, these containers would not match the performance of a code-generation based IoC, if that could be achieved. It is quite irritating to witness the cost we pay for trying to clean our code by -among other things- using a reflection-based IoC framework and being able to do nothing about it. The idea is to let the user (the developer) write their code as they please, and let the IoC take care of code generation during compilation to provide a working and performant solution in the target assembly.
 
 I have finally managed to find the time to start working on the solution. Fortunately for me and for the community, I read about source generators in .Net before starting. Having watched the power of source-generators combined with the power of Roslyn, I decided to pick that path over other approaches such as T4 templates and CodeDom for code generation, and I&apos;m glad I made that choice. Mine might not be the first solution to follow this approach, but I like to think of it as the most powerful and flexible one to-date.
 
-Below is a documentation as well as a quick-start guide to walk you through the framework. If you like my work and are looking forward to supporting me and helping me to continue to improve it, you may do that by:
+Below is a documentation as well as features overview and a quick-start guide to walk you through the framework. If you like my work and are looking forward to supporting me and helping me to continue to improve it, you may do that by:
 - [Sponsoring me on Patreon.com](https://www.patreon.com/alyelhaddad "Sponsoring me on Patreon.com").
 - [One-time donations via Paypal](https://paypal.me/alyelhaddad "One-time donations via Paypal").
 
