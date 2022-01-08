@@ -1,0 +1,34 @@
+﻿namespace ThunderboltIoc.SourceGenerators
+{
+    public static class EnumerableExtensions
+    {
+        /// <remarks>
+        /// does not implement fail-early paradigm
+        /// </remarks>
+        public static IEnumerable<(TLeft left, TRight right)> IndexTupleJoin<TLeft, TRight>(this IEnumerable<TLeft> left, IEnumerable<TRight> right)
+        {
+            IEnumerator<TLeft> leftE = left.GetEnumerator();
+            IEnumerator<TRight> rightE = right.GetEnumerator();
+            bool leftMoved, rightMoved;
+            while ((leftMoved = leftE.MoveNext()) & (rightMoved = rightE.MoveNext())) //logical AND (&) is intended
+            {
+                yield return (leftE.Current, rightE.Current);
+            }
+            if (leftMoved == rightMoved)
+            {
+                leftE.Dispose();
+                rightE.Dispose();
+            }
+            else
+            {
+                try
+                { throw new InvalidOperationException(); }
+                finally
+                {
+                    leftE.Dispose();
+                    rightE.Dispose();
+                }
+            }
+        }
+    }
+}

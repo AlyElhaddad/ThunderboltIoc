@@ -13,13 +13,13 @@ internal static class FactoryGeneratorHelpers
         return
             symbolDeclarations
             .SelectMany(item => item.declaration.GetDeclaredMethods(Consts.RegisterMethodName, Consts.@protected, Consts.@override).Select(m => (methodDecl: m, item.semanticModel)))
-            .Where(item =>
-            {
-                return item.semanticModel.GetDeclaredSymbol(item.methodDecl) is IMethodSymbol method
-                        && !method.TypeParameters.Any()
-                        && method.Parameters.Length == 1
-                        && SymbolEqualityComparer.Default.Equals(method.Parameters[0].Type, registrarTypeSymbol);
-            });
+            .Where(item => item.semanticModel.GetDeclaredSymbol(item.methodDecl) is IMethodSymbol method
+                && !method.TypeParameters.Any()
+                && method.Parameters.Length == 1
+                && method.Parameters[0].Type.GetFullyQualifiedName() == registrarTypeSymbol.GetFullyQualifiedName());
+        //SymbolEqualityComparer.Default.Equals turned out to be bugged and unreliable
+        //  it returns trues and falses indeterministicly for the same unchanged code-base
+        //  I have therefore decided to make the last comparison by types' full names as strings instead.
     }
 
     private static IEnumerable<INamedTypeSymbol> TypesToRegister(IEnumerable<(MethodDeclarationSyntax methodDecl, SemanticModel semanticModel)> overriddenRegisterDeclarations, HashSet<IMethodSymbol> registrarNonFactoryMethods)
@@ -27,10 +27,13 @@ internal static class FactoryGeneratorHelpers
         foreach (var (registerDecl, semanticModel) in overriddenRegisterDeclarations)
         {
             BlockSyntax blockStatement = registerDecl.Body ?? throw new MissingMemberException();
+#pragma warning disable RS1024 // Symbols should be compared for equality
             IEnumerable<InvocationExpressionSyntax> invExpressions
                 = blockStatement.DescendantNodes().OfType<InvocationExpressionSyntax>()
-                .Where(inv => semanticModel.GetOperation(inv) is IInvocationOperation invOp
-                              && registrarNonFactoryMethods.Contains(invOp.TargetMethod.OriginalDefinition));
+                    .Where(inv => semanticModel.GetOperation(inv) is IInvocationOperation invOp
+                        && registrarNonFactoryMethods.Contains(invOp.TargetMethod.OriginalDefinition, MethodDefinitionEqualityComparer.Default));
+            // Just like INamedTypeSymbol, SymbolEqualityComparer does not seem to be reliable when it comes to comparing IMethodSymbol
+#pragma warning restore RS1024 // Symbols should be compared for equality
             foreach (InvocationExpressionSyntax syntax in invExpressions)
             {
                 if ((syntax.Expression as MemberAccessExpressionSyntax)?.Name is not GenericNameSyntax genericName)

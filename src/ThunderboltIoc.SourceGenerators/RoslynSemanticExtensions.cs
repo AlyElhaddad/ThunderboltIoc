@@ -118,4 +118,20 @@ internal static class RoslynSemanticExtensions
         return
             fullNames.Select(fullName => semanticModel.GetSpeculativeTypeInfo(0, SyntaxFactory.ParseTypeName(fullName), SpeculativeBindingOption.BindAsTypeOrNamespace).Type as INamedTypeSymbol);
     }
+
+    public static string GetMethodFullName(this IMethodSymbol method)
+    {
+        return $"{method.ContainingType.GetFullyQualifiedName()}.{method.Name}";
+    }
+    public static bool AreDefinitionsEqual(this IMethodSymbol method, IMethodSymbol equalMethod)
+    {
+        method = method.OriginalDefinition;
+        equalMethod = equalMethod.OriginalDefinition;
+        return ReferenceEquals(method, equalMethod)
+            ||
+            (method.GetMethodFullName() == equalMethod.GetMethodFullName()
+            && method.TypeParameters.Length == equalMethod.TypeParameters.Length
+            && method.Parameters.Length == equalMethod.Parameters.Length
+            && method.Parameters.IndexTupleJoin(equalMethod.Parameters).All(item => item.left.Type.GetFullyQualifiedName() == item.right.Type.GetFullyQualifiedName()));
+    }
 }
