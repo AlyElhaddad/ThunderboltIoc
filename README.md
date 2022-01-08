@@ -204,7 +204,7 @@ The only services for which code generation can work are services that have exac
 # 9. Planned for future versions
 ## 9.1. Lift the single public constructor restriction.
 As mentioned in the section above, it is feasible and desired to remove this limitation.
-## 9.2. Better source generation exceptional handling
+## 9.2. Better source generation exception handling
 Currently, in the best-case scenario and if you follow the documentation, we shouldn&apos;t worry about source generation exceptions. However, upon failing to adhere to the documentation, it is possible that an unhandled exception might arise. In such a case, the source generator might (or might not) fail at the whole process. When that happens, it is possible that no code gets generated at all (you would get a notification in the build output but you might not notice it).
 
 It is planned to provide better exception handling so that failure to generate code for a particular service wouldn&apos;t cause the whole process to fail. It would also be nice to generate relevant warnings or errors.
