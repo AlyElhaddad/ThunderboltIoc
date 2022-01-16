@@ -34,10 +34,16 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.0.1" />
+    <PackageReference Include="ThunderboltIoc.Abstractions" Version="$(Version)" GeneratePathProperty="true" PrivateAssets="all" />
   </ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\ThunderboltIoc.Abstractions\ThunderboltIoc.Abstractions.csproj" 
-                      OutputItemType="Analyzer"/>
-  </ItemGroup>
+  <PropertyGroup>
+    <GetTargetPathDependsOn>$(GetTargetPathDependsOn);GetDependencyTargetPaths</GetTargetPathDependsOn>
+  </PropertyGroup>
+
+  <Target Name="GetDependencyTargetPaths">
+    <ItemGroup>
+      <TargetPathWithTargetPlatformMoniker Include="$(PKGThunderboltIoc_Abstractions)\lib\netstandard2.0\ThunderboltIoc.Abstractions.dll" IncludeRuntimeDependency="false" />
+    </ItemGroup>
+  </Target>
 </Project>
