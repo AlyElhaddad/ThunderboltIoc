@@ -1,237 +1,83 @@
 ﻿namespace ThunderboltIoc;
 
-public sealed class ThunderboltContainer : IThunderboltContainer, IThunderboltRegistry, IThunderboltResolver, IThunderboltRegistrar, IServiceProvider
+internal sealed class ThunderboltContainer : IThunderboltContainer, IThunderboltResolver, IThunderboltRegistrar, IThunderboltFactoryDictator, IServiceProvider
 {
-    private class RegisterIfNotExistsRegistrar<TReg> : IThunderboltRegistrar
-        where TReg : IThunderboltRegistrar, IThunderboltRegistry
-    {
-        private static RegisterIfNotExistsRegistrar<TReg>? instance;
-        public static RegisterIfNotExistsRegistrar<TReg> GetInstance(TReg reg) => instance ??= new(reg);
-
-
-        private readonly TReg reg;
-
-        private RegisterIfNotExistsRegistrar(TReg reg)
-        {
-            this.reg = reg;
-        }
-
-        public void AddTransient<TService>()
-        {
-            if (!reg.Registers.ContainsKey(typeof(TService)))
-                reg.AddTransient<TService>();
-        }
-
-        public void AddScoped<TService>()
-        {
-            if (!reg.Registers.ContainsKey(typeof(TService)))
-                reg.AddScoped<TService>();
-        }
-
-        public void AddSingleton<TService>()
-        {
-            if (!reg.Registers.ContainsKey(typeof(TService)))
-                reg.AddSingleton<TService>();
-        }
-
-        public void AddTransient<TService, TImpl>() where TImpl : TService
-        {
-            if (!reg.Registers.ContainsKey(typeof(TService)))
-                reg.AddTransient<TService, TImpl>();
-        }
-
-        public void AddScoped<TService, TImpl>() where TImpl : TService
-        {
-            if (!reg.Registers.ContainsKey(typeof(TService)))
-                reg.AddScoped<TService, TImpl>();
-        }
-
-        public void AddSingleton<TService, TImpl>() where TImpl : TService
-        {
-            if (!reg.Registers.ContainsKey(typeof(TService)))
-                reg.AddSingleton<TService, TImpl>();
-        }
-
-        public void AddTransientFactory<TService>(Func<TService> factory)
-        {
-            if (!reg.Registers.ContainsKey(typeof(TService)))
-                reg.AddTransientFactory(factory);
-        }
-
-        public void AddScopedFactory<TService>(Func<TService> factory)
-        {
-            if (!reg.Registers.ContainsKey(typeof(TService)))
-                reg.AddScopedFactory(factory);
-        }
-
-        public void AddSingletonFactory<TService>(Func<TService> factory)
-        {
-            if (!reg.Registers.ContainsKey(typeof(TService)))
-                reg.AddSingletonFactory(factory);
-        }
-
-        public void AddTransient<TService>(Func<Type> implSelector)
-        {
-            if (!reg.Registers.ContainsKey(typeof(TService)))
-                reg.AddTransient<TService>(implSelector);
-        }
-
-        public void AddScoped<TService>(Func<Type> implSelector)
-        {
-            if (!reg.Registers.ContainsKey(typeof(TService)))
-                reg.AddScoped<TService>(implSelector);
-        }
-
-        public void AddSingleton<TService>(Func<Type> implSelector)
-        {
-            if (!reg.Registers.ContainsKey(typeof(TService)))
-                reg.AddSingleton<TService>(implSelector);
-        }
-    }
-
-    private readonly Dictionary<Type, ThunderboltRegister> registers;
-    private readonly ThunderboltScope singletonScope;
-    private readonly HashSet<Type> attachedRegistrations;
-
     internal ThunderboltContainer()
     {
-        registers = new()
-        {
-            { typeof(IThunderboltContainer), new IocRegister<IThunderboltContainer>(typeof(ThunderboltContainer), ThunderboltServiceLifetime.Singleton, null, factory: () => this) },
-            { typeof(IThunderboltResolver), new IocRegister<IThunderboltResolver>(typeof(ThunderboltContainer), ThunderboltServiceLifetime.Singleton, null, factory: () => this) },
-            { typeof(IThunderboltScope), new IocRegister<IThunderboltScope>(typeof(ThunderboltScope), ThunderboltServiceLifetime.Transient, null, factory: () => CreateScope()) },
-        };
-        singletonScope = new(this);
-        attachedRegistrations = new();
-    }
+#pragma warning disable CS8602 // Dereference of a possibly null reference.
+        ThunderboltServiceRegistry<IThunderboltContainer>.Dictate((_, _, userFactory) => userFactory());
+        ThunderboltServiceRegistry<IThunderboltScope>.Dictate((_, _, userFactory) => userFactory());
+        ThunderboltServiceRegistry<IThunderboltResolver>.Dictate((resolver, _, _) => resolver);
+#pragma warning restore CS8602 // Dereference of a possibly null reference.
 
-    IReadOnlyDictionary<Type, ThunderboltRegister> IThunderboltRegistry.Registers { get => registers; }
-
-    public IThunderboltScope CreateScope()
-    {
-        return new ThunderboltScope(this);
-    }
-
-    public T Get<T>()
-    {
-        return InternalGet<T>(null);
-    }
-
-    internal T InternalGet<T>(ThunderboltScope? scope)
-    {
-        Type t = typeof(T);
-        return (T)InternalGet(t, scope);
-    }
-    internal object InternalGet(Type type, ThunderboltScope? scope)
-    {
-        if (!registers.TryGetValue(type, out var register))
-            throw new InvalidOperationException($"Unable to locate a registered implementation for a service of type '{type}'.");
-        return (register.Lifetime, scope) switch
-        {
-            (ThunderboltServiceLifetime.Scoped, ThunderboltScope) => scope.GetScoped(type),
-            (ThunderboltServiceLifetime.Singleton or ThunderboltServiceLifetime.Scoped, _) => singletonScope.GetScoped(type),
-            (ThunderboltServiceLifetime.Transient, _) => Create(this, register),
-            _ => throw new InvalidOperationException("Unknown ServiceLifetime.")
-        };
-    }
-    internal object Create(Type type, IThunderboltResolver iocResolver)
-    {
-        if (!registers.TryGetValue(type, out var register))
-            throw new InvalidOperationException($"Unable to locate a registered implementation for a service of type '{type}'.");
-        return Create(iocResolver, register);
-    }
-    private static object Create(IThunderboltResolver iocResolver, ThunderboltRegister register)
-    {
-        if (register.Factory is not null) return register.Factory();
-        if (register.ImplSelector is not null) return ThunderboltFactory.Instance.Create(iocResolver, register.ImplSelector());
-
-        return ThunderboltFactory.Instance.Create(iocResolver, register.ImplType);
+        ThunderboltServiceRegistry<IThunderboltContainer>.Register(ThunderboltServiceLifetime.Singleton, () => this);
+        ThunderboltServiceRegistry<IThunderboltScope>.Register(ThunderboltServiceLifetime.Transient, () => CreateScope());
+        ThunderboltServiceRegistry<IThunderboltResolver>.Register(ThunderboltServiceLifetime.Transient);
     }
 
     internal void Attach<TRegistration>()
         where TRegistration : notnull, ThunderboltRegistration, new()
     {
-        Type regType = typeof(TRegistration);
-        if (!attachedRegistrations.Add(regType))
-            throw new InvalidOperationException($"A registration of type '{regType}' has already been attached. Registrations of the same type must not be registered multiple times.");
         TRegistration reg = new();
-        reg.StaticRegister(RegisterIfNotExistsRegistrar<ThunderboltContainer>.GetInstance(this), ThunderboltFactory.Instance);
-        reg.DictateServiceFactories(ThunderboltFactory.Instance);
+        reg.DictateServiceFactories(this);
+        reg.StaticRegister(this);
         reg.Register(this);
-        if (reg is IDisposable disposable)
-            disposable.Dispose();
     }
 
-    #region IIocRegistrar
-    void IThunderboltRegistrar.AddTransient<TService>()
+    public IThunderboltScope CreateScope()
+        => new ThunderboltScope(this);
+
+    public T Get<T>() where T : notnull
     {
-        Type serviceImpl = typeof(TService);
-        registers.Add(serviceImpl, new IocRegister<TService>(serviceImpl, ThunderboltServiceLifetime.Transient, null, null));
+        return ThunderboltServiceRegistry<T>.RegisteredLifetime switch
+        {
+            ThunderboltServiceLifetime.Transient => ThunderboltServiceRegistry<T>.Factory(this, ThunderboltServiceRegistry<T>.RegisteredImplSelector, ThunderboltServiceRegistry<T>.RegisteredUserFactory),
+            ThunderboltServiceLifetime.Scoped or ThunderboltServiceLifetime.Singleton => ThunderboltServiceRegistry<T>.GetSingleton(this),
+            _ => throw new InvalidOperationException("Unknown ThunderboltServiceLifetime."),
+        };
+    }
+    public object GetService(Type serviceType)
+    {
+        var genAcc = ThunderboltServiceRegistry.generic[serviceType];
+        //var (lifetimeGetter, factory, _, singletonInstanceGetter, _) = ThunderboltServiceRegistry.generic[serviceType];
+        return genAcc.lifetimeGetter() switch
+        {
+            ThunderboltServiceLifetime.Transient => genAcc.factory(this),
+            ThunderboltServiceLifetime.Scoped or ThunderboltServiceLifetime.Singleton => genAcc.singletonInstanceGetter(this),
+            _ => throw new InvalidOperationException("Unknown ThunderboltServiceLifetime."),
+        };
     }
 
-    void IThunderboltRegistrar.AddScoped<TService>()
-    {
-        Type serviceImpl = typeof(TService);
-        registers.Add(serviceImpl, new IocRegister<TService>(serviceImpl, ThunderboltServiceLifetime.Scoped, null, null));
-    }
+    #region IThunderboltRegistrar
+    public void AddTransient<TService>() where TService : notnull
+        => ThunderboltServiceRegistry<TService>.Register(ThunderboltServiceLifetime.Transient);
+    public void AddScoped<TService>() where TService : notnull
+        => ThunderboltServiceRegistry<TService>.Register(ThunderboltServiceLifetime.Scoped);
+    public void AddSingleton<TService>() where TService : notnull
+        => ThunderboltServiceRegistry<TService>.Register(ThunderboltServiceLifetime.Singleton);
 
-    void IThunderboltRegistrar.AddSingleton<TService>()
-    {
-        Type serviceImpl = typeof(TService);
-        registers.Add(serviceImpl, new IocRegister<TService>(serviceImpl, ThunderboltServiceLifetime.Singleton, null, null));
-    }
+    public void AddTransient<TService, TImpl>() where TService : notnull where TImpl : notnull, TService
+        => ThunderboltServiceRegistry<TService>.Register(ThunderboltServiceLifetime.Transient);
+    public void AddScoped<TService, TImpl>() where TService : notnull where TImpl : notnull, TService
+        => ThunderboltServiceRegistry<TService>.Register(ThunderboltServiceLifetime.Scoped);
+    public void AddSingleton<TService, TImpl>() where TService : notnull where TImpl : notnull, TService
+        => ThunderboltServiceRegistry<TService>.Register(ThunderboltServiceLifetime.Singleton);
 
-    void IThunderboltRegistrar.AddTransient<TService, TImpl>()
-    {
-        registers.Add(typeof(TService), new IocRegister<TService>(typeof(TImpl), ThunderboltServiceLifetime.Transient, null, null));
-    }
+    public void AddTransientFactory<TService>(in Func<TService> factory) where TService : notnull
+        => ThunderboltServiceRegistry<TService>.Register(ThunderboltServiceLifetime.Transient, factory);
+    public void AddScopedFactory<TService>(in Func<TService> factory) where TService : notnull
+        => ThunderboltServiceRegistry<TService>.Register(ThunderboltServiceLifetime.Scoped, factory);
+    public void AddSingletonFactory<TService>(in Func<TService> factory) where TService : notnull
+        => ThunderboltServiceRegistry<TService>.Register(ThunderboltServiceLifetime.Singleton, factory);
 
-    void IThunderboltRegistrar.AddScoped<TService, TImpl>()
-    {
-        registers.Add(typeof(TService), new IocRegister<TService>(typeof(TImpl), ThunderboltServiceLifetime.Scoped, null, null));
-    }
-
-    void IThunderboltRegistrar.AddSingleton<TService, TImpl>()
-    {
-        registers.Add(typeof(TService), new IocRegister<TService>(typeof(TImpl), ThunderboltServiceLifetime.Singleton, null, null));
-    }
-
-    void IThunderboltRegistrar.AddTransientFactory<TService>(Func<TService> factory)
-    {
-        Type serviceImpl = typeof(TService);
-        registers.Add(serviceImpl, new IocRegister<TService>(serviceImpl, ThunderboltServiceLifetime.Transient, null, factory: factory));
-    }
-
-    void IThunderboltRegistrar.AddScopedFactory<TService>(Func<TService> factory)
-    {
-        Type serviceImpl = typeof(TService);
-        registers.Add(serviceImpl, new IocRegister<TService>(serviceImpl, ThunderboltServiceLifetime.Scoped, null, factory: factory));
-    }
-
-    void IThunderboltRegistrar.AddSingletonFactory<TService>(Func<TService> factory)
-    {
-        Type serviceImpl = typeof(TService);
-        registers.Add(serviceImpl, new IocRegister<TService>(serviceImpl, ThunderboltServiceLifetime.Singleton, null, factory: factory));
-    }
-
-    void IThunderboltRegistrar.AddTransient<TService>(Func<Type> implSelector)
-    {
-        registers.Add(typeof(TService), new IocRegister<TService>(null, ThunderboltServiceLifetime.Transient, implSelector, null));
-    }
-    void IThunderboltRegistrar.AddScoped<TService>(Func<Type> implSelector)
-    {
-        registers.Add(typeof(TService), new IocRegister<TService>(null, ThunderboltServiceLifetime.Scoped, implSelector, null));
-    }
-
-    void IThunderboltRegistrar.AddSingleton<TService>(Func<Type> implSelector)
-    {
-        registers.Add(typeof(TService), new IocRegister<TService>(null, ThunderboltServiceLifetime.Singleton, implSelector, null));
-    }
-
+    public void AddTransient<TService>(in Func<Type> implSelector) where TService : notnull
+        => ThunderboltServiceRegistry<TService>.Register(ThunderboltServiceLifetime.Transient, implSelector);
+    public void AddScoped<TService>(in Func<Type> implSelector) where TService : notnull
+        => ThunderboltServiceRegistry<TService>.Register(ThunderboltServiceLifetime.Scoped, implSelector);
+    public void AddSingleton<TService>(in Func<Type> implSelector) where TService : notnull
+        => ThunderboltServiceRegistry<TService>.Register(ThunderboltServiceLifetime.Singleton, implSelector);
     #endregion
 
-    object IServiceProvider.GetService(Type serviceType)
-    {
-        return InternalGet(serviceType, null);
-    }
+    public void Dictate<T>(in Func<IThunderboltResolver, Func<Type>?, Func<T>?, T> factory) where T : notnull
+        => ThunderboltServiceRegistry<T>.Dictate(factory);
 }

@@ -11,6 +11,7 @@
     <IsRoslynComponent>true</IsRoslynComponent>
     <SuppressDependenciesWhenPacking>true</SuppressDependenciesWhenPacking>
     <Description>The source generator project used to analyze registrations and generate the necessary services' factories for ThunderboltIoc.</Description>
+    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
   </PropertyGroup>
   
   <ItemGroup>
@@ -36,7 +37,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\ThunderboltIoc.Abstractions\ThunderboltIoc.Abstractions.csproj" />
+    <ProjectReference Include="..\ThunderboltIoc.Abstractions\ThunderboltIoc.Abstractions.csproj" 
+                      OutputItemType="Analyzer"/>
   </ItemGroup>
-  
 </Project>

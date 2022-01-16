@@ -4,24 +4,23 @@ using System.Text.RegularExpressions;
 
 namespace ThunderboltIoc.SourceGenerators;
 
-internal static class AttributeGeneratorHelpers
+internal static class AttributeGeneratorHelper
 {
-
-    private class SymbolValueTupleEqualityComparer : IEqualityComparer<(INamedTypeSymbol, INamedTypeSymbol?, int)>
+    private class SymbolValueTupleEqualityComparer : IEqualityComparer<(INamedTypeSymbol, INamedTypeSymbol?, ThunderboltServiceLifetime)>
     {
-        private static readonly SymbolEqualityComparer comparer = SymbolEqualityComparer.Default;
+        private static readonly EqualityComparer<string> comparer = EqualityComparer<string>.Default;
         public static readonly SymbolValueTupleEqualityComparer Default = new();
 
         private SymbolValueTupleEqualityComparer() { }
 
-        public bool Equals((INamedTypeSymbol, INamedTypeSymbol?, int) x, (INamedTypeSymbol, INamedTypeSymbol?, int) y)
+        public bool Equals((INamedTypeSymbol, INamedTypeSymbol?, ThunderboltServiceLifetime) x, (INamedTypeSymbol, INamedTypeSymbol?, ThunderboltServiceLifetime) y)
         {
-            return comparer.Equals(x.Item1, y.Item1);
+            return comparer.Equals(x.Item1.GetFullyQualifiedName(), y.Item1.GetFullyQualifiedName());
         }
 
-        public int GetHashCode((INamedTypeSymbol, INamedTypeSymbol?, int) obj)
+        public int GetHashCode((INamedTypeSymbol, INamedTypeSymbol?, ThunderboltServiceLifetime) obj)
         {
-            return comparer.GetHashCode(obj.Item1);
+            return comparer.GetHashCode(obj.Item1.GetFullyQualifiedName());
         }
     }
 
@@ -53,12 +52,12 @@ internal static class AttributeGeneratorHelpers
             .OfType<(AttributeData, string)>();
     }
 
-    private static IEnumerable<(INamedTypeSymbol type, INamedTypeSymbol? impl, int serviceLifetime)> IncludedTypes(Compilation compilation)
+    private static IEnumerable<(INamedTypeSymbol type, INamedTypeSymbol? impl, ThunderboltServiceLifetime serviceLifetime)> IncludedTypes(Compilation compilation)
     {
         var allTypes = compilation.GetAllTypeMembers();
         var typeAttrs = GetTypeAttributes(compilation);
 
-        List<(INamedTypeSymbol type, INamedTypeSymbol? impl, int serviceLifetime)> inclusions = new();
+        List<(INamedTypeSymbol type, INamedTypeSymbol? impl, ThunderboltServiceLifetime serviceLifetime)> inclusions = new();
         List<INamedTypeSymbol> exclusions = new();
         foreach (var (attr, type) in typeAttrs)
         {
@@ -66,7 +65,7 @@ internal static class AttributeGeneratorHelpers
             {
                 case Consts.includeAttrName:
                     INamedTypeSymbol? impl = attr.data.ConstructorArguments.Where(arg => arg.Kind == TypedConstantKind.Type).Select(arg => arg.Type as INamedTypeSymbol).FirstOrDefault(t => t is not null);
-                    int serviceLifetime = attr.data.ConstructorArguments.Where(arg => arg.Kind == TypedConstantKind.Enum).Select(arg => (int)arg.Value).First();
+                    ThunderboltServiceLifetime serviceLifetime = attr.data.ConstructorArguments.Where(arg => arg.Kind == TypedConstantKind.Enum).Select(arg => (ThunderboltServiceLifetime)(int)arg.Value).First();
                     inclusions.Add((type, impl, serviceLifetime));
                     bool registerChilds = (attr.data.ConstructorArguments.Select(arg => arg.Value).FirstOrDefault(arg => arg is bool) as bool?) ?? false;
                     if (registerChilds)
@@ -87,14 +86,14 @@ internal static class AttributeGeneratorHelpers
             }
         }
 
-        return inclusions.Where(incl => !exclusions.Any(excl => incl.type.GetFullyQualifiedName() == excl.GetFullyQualifiedName()));
+        return inclusions.WhereIf(exclusions.Any(), incl => !exclusions.Any(excl => incl.type.GetFullyQualifiedName() == excl.GetFullyQualifiedName()));
     }
 
-    private static IEnumerable<(INamedTypeSymbol type, INamedTypeSymbol? impl, int serviceLifetime)> IncludedRegexTypes(Compilation compilation)
+    private static IEnumerable<(INamedTypeSymbol type, INamedTypeSymbol? impl, ThunderboltServiceLifetime serviceLifetime)> IncludedRegexTypes(Compilation compilation)
     {
         var allTypes = compilation.GetAllTypeMembers();
         var assemblyAttrs = GetAssemblyAttributes(compilation);
-        List<(INamedTypeSymbol type, string typeFullName, INamedTypeSymbol? impl, int servcieLifetime)> inclusions = new();
+        List<(INamedTypeSymbol type, string typeFullName, INamedTypeSymbol? impl, ThunderboltServiceLifetime servcieLifetime)> inclusions = new();
         List<(INamedTypeSymbol type, string typeFullName)> exclusions = new();
         foreach (var (data, attrTypeName) in assemblyAttrs.Where(attr => attr.attrTypeName is Consts.regexIncludeAttrName or Consts.regexExcludeAttrName))
         {
@@ -103,10 +102,10 @@ internal static class AttributeGeneratorHelpers
             {
                 case Consts.regexIncludeAttrName:
                     pattern = (string?)data.ConstructorArguments[1].Value;
-                    int serviceLifetime = (int?)data.ConstructorArguments[0].Value ?? default;
+                    ThunderboltServiceLifetime serviceLifetime = (ThunderboltServiceLifetime?)(int?)data.ConstructorArguments[0].Value ?? default;
                     if (pattern is null) continue;
                     pattern = $@"({Consts.global})?{pattern}";
-                    IEnumerable<(INamedTypeSymbol type, string typeFullName, INamedTypeSymbol? typeImpl, int serviceLifetime)> typesToInclude;
+                    IEnumerable<(INamedTypeSymbol type, string typeFullName, INamedTypeSymbol? typeImpl, ThunderboltServiceLifetime serviceLifetime)> typesToInclude;
                     var types
                         = allTypes.Select(type => (type, typeFullName: type.GetFullyQualifiedName(), serviceLifetime))
                         .Where(item => Regex.IsMatch(item.typeFullName, pattern));
@@ -140,45 +139,13 @@ internal static class AttributeGeneratorHelpers
         }
 
         return inclusions
-            .Where(incl => !exclusions.Any(excl => excl.typeFullName == incl.typeFullName))
+            .WhereIf(exclusions.Any(), incl => !exclusions.Any(excl => excl.typeFullName == incl.typeFullName))
             .Select(incl => (incl.type, incl.impl, incl.servcieLifetime));
     }
 
-    private static IEnumerable<(INamedTypeSymbol type, INamedTypeSymbol? impl, int serviceLifetime)> AllIncludedTypes(Compilation compilation)
+    internal static IEnumerable<(INamedTypeSymbol type, INamedTypeSymbol? impl, ThunderboltServiceLifetime serviceLifetime)> AllIncludedTypes(Compilation compilation)
     {
         return IncludedTypes(compilation)
             .Union(IncludedRegexTypes(compilation), SymbolValueTupleEqualityComparer.Default);
-    }
-
-    private static string GenerateRegistrations(IEnumerable<(INamedTypeSymbol type, INamedTypeSymbol? impl, int serviceLifetime)> regs)
-    {
-        return string.Join(Environment.NewLine,
-            regs.Select(reg => $"\t\t\treg.Add{(reg.serviceLifetime switch { 0 => "Singleton", 1 => "Scoped", 2 => "Transient", _ => throw new ArgumentException() })}<{reg.type.GetFullyQualifiedName()}{(reg.impl is null ? "" : $", {reg.impl.GetFullyQualifiedName()}")}>();"));
-    }
-
-    internal static void GenerateRegisterStaticTypes(GeneratorExecutionContext context)
-    {
-        if (context.SyntaxContextReceiver is not SyntaxContextReceiver syntaxContextReceiver)
-            return;
-        var includedTypes = AllIncludedTypes(context.Compilation);
-
-        foreach (var (symbol, declarations) in syntaxContextReceiver.RegistrationTypes)
-        {
-            string factories = string.Join(Environment.NewLine, includedTypes.Select(t => $"\t\t\t{FactoryGeneratorHelpers.GenerateTypeFactory(t.impl ?? t.type)}"));
-            string source = @$"using {Consts.global}{Consts.mainNs};
-namespace {symbol.ContainingNamespace.GetFullNamespaceName().RemovePrefix(Consts.global)}
-{{
-    partial class {symbol.Name}
-    {{
-        protected override void StaticRegister(IThunderboltRegistrar reg, IThunderboltFactoryDictator dictator)
-        {{
-{factories}
-
-{GenerateRegistrations(includedTypes)}
-        }}
-    }}
-}}";
-            context.AddSource($"{symbol.Name}.static.generated.cs", source);
-        }
     }
 }

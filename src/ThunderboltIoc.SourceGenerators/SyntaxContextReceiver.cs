@@ -35,7 +35,10 @@ public class SyntaxContextReceiver : ISyntaxContextReceiver
                     = regType.DeclaringSyntaxReferences
                     .SelectMany(sr => sr.SyntaxTree.GetRoot().DescendantNodesAndSelf(sr.Span).OfType<ClassDeclarationSyntax>().Select(decl => (decl, semanticModel: context.SemanticModel.Compilation.GetSemanticModel(sr.SyntaxTree))))
                     .Where(item => item.decl.Identifier.ValueText == regType.Name);
-                if (declarations.Any() && declarations.All(item => item.decl.Modifiers.Any(m => m.ValueText == Consts.partial)))
+                if (declarations.Any()
+                    && declarations.All(item => item.decl.Modifiers.Any(m => m.ValueText == Consts.partial))
+                    && regType.GetFullyQualifiedName() is string regTypeFullName
+                    && !registrationTypes.Any(item => regTypeFullName.Equals(item.symbol.GetFullyQualifiedName())))
                 {
                     registrationTypes.Add((regType, declarations));
                 }

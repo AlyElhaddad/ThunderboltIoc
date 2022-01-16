@@ -1,6 +1,6 @@
 <Project>
   <PropertyGroup>
-    <Version>1.1.1</Version>
+    <Version>1.2.0</Version>
     <Authors>Aly Elhaddad</Authors>
     <Owners>Aly Elhaddad</Owners>
     <PackageProjectUrl>https://github.com/AlyElhaddad/ThunderboltIoc</PackageProjectUrl>
@@ -14,6 +14,10 @@
     <PackageOutputPath>..\..\output_packages</PackageOutputPath>
   </PropertyGroup>
 
+  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+    <Optimize>true</Optimize>
+  </PropertyGroup>
+  
   <ItemGroup>
     <None Include="..\..\assets\thunderbolt_128.png" Pack="true" Visible="false" PackagePath="images\thunderbolt_128.png"/>
     <None Include="..\..\README.md" Pack="true" Visible="false" PackagePath="docs\README.md"/>

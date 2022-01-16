@@ -17,5 +17,5 @@ public interface IThunderboltFactoryDictator
     /// </summary>
     [EditorBrowsable(EditorBrowsableState.Never)]
     [Browsable(false)]
-    void Dictate(Type serviceType, Func<IThunderboltResolver, object> serviceFactory);
+    void Dictate<T>(in Func<IThunderboltResolver, Func<Type>?, Func<T>?, T> factory) where T : notnull;
 }
