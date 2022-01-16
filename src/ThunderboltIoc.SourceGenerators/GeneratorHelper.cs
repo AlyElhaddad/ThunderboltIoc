@@ -81,18 +81,19 @@ $@"dictator.Dictate<{fullyQualifiedName}>((resolver, implSelector, userFactory) 
 $@"dictator.Dictate<{fullyQualifiedName}>((resolver, implSelector, userFactory) => {GenerateTypeCtorCall(impl ?? type)});";
         }
         
-        private static string GenerateDictates(IEnumerable<(ThunderboltServiceLifetime? lifetime, INamedTypeSymbol service, INamedTypeSymbol? serviceImpl, IEnumerable<INamedTypeSymbol>? selectorImpls, bool hasFactory, bool staticRegister)> allTypes)
+        private static string GenerateDictates(IEnumerable<(int? lifetime, INamedTypeSymbol service, INamedTypeSymbol? serviceImpl, IEnumerable<INamedTypeSymbol>? selectorImpls, bool hasFactory, bool staticRegister)> allTypes)
         {
             return string.Join(Environment.NewLine, allTypes.Select(item => GenerateDictate(item.service, item.serviceImpl, item.selectorImpls, item.hasFactory)));
         }
      
-        private static string GenerateStaticRegistrations(IEnumerable<(ThunderboltServiceLifetime? lifetime, INamedTypeSymbol service, INamedTypeSymbol? serviceImpl, IEnumerable<INamedTypeSymbol>? selectorImpls, bool hasFactory, bool staticRegister)> allTypes)
+        private static string GenerateStaticRegistrations(IEnumerable<(int? lifetime, INamedTypeSymbol service, INamedTypeSymbol? serviceImpl, IEnumerable<INamedTypeSymbol>? selectorImpls, bool hasFactory, bool staticRegister)> allTypes)
         {
             return string.Join(Environment.NewLine,
-                allTypes.Select(reg => $"reg.Add{reg.lifetime}<{reg.service.GetFullyQualifiedName()}{(reg.serviceImpl is null ? "" : $", {reg.serviceImpl.GetFullyQualifiedName()}")}>();"));
+                allTypes.Select(reg =>
+                $"reg.Add{(reg.lifetime switch { 0 => Consts.Singleton, 1 => Consts.Scoped, 2 => Consts.Transient, _ => ""})}<{reg.service.GetFullyQualifiedName()}{(reg.serviceImpl is null ? "" : $", {reg.serviceImpl.GetFullyQualifiedName()}")}>();"));
         }
       
-        internal static string GenerateDictateServiceFactories(IEnumerable<(ThunderboltServiceLifetime? lifetime, INamedTypeSymbol service, INamedTypeSymbol? serviceImpl, IEnumerable<INamedTypeSymbol>? selectorImpls, bool hasFactory, bool staticRegister)> allTypes)
+        internal static string GenerateDictateServiceFactories(IEnumerable<(int? lifetime, INamedTypeSymbol service, INamedTypeSymbol? serviceImpl, IEnumerable<INamedTypeSymbol>? selectorImpls, bool hasFactory, bool staticRegister)> allTypes)
         {
             return !allTypes.Any() ? "" :
 $@"protected override void DictateServiceFactories({Consts.IIocDictatorTypeFullName} dictator)
@@ -101,7 +102,7 @@ $@"protected override void DictateServiceFactories({Consts.IIocDictatorTypeFullN
 }}";
         }
      
-        internal static string GenerateStaticRegister(IEnumerable<(ThunderboltServiceLifetime? lifetime, INamedTypeSymbol service, INamedTypeSymbol? serviceImpl, IEnumerable<INamedTypeSymbol>? selectorImpls, bool hasFactory, bool staticRegister)> allTypes)
+        internal static string GenerateStaticRegister(IEnumerable<(int? lifetime, INamedTypeSymbol service, INamedTypeSymbol? serviceImpl, IEnumerable<INamedTypeSymbol>? selectorImpls, bool hasFactory, bool staticRegister)> allTypes)
         {
             return !allTypes.Any(item => item.staticRegister) ? "" :
 $@"protected override void StaticRegister({Consts.IIocRegistrarTypeFullName} reg)

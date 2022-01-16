@@ -9,10 +9,18 @@
 
   <ItemGroup>
     <PackageReference Include="BenchmarkDotNet" Version="0.13.1" />
-    <PackageReference Include="ThunderboltIoc" Version="$(Version)" />
+    <!--<PackageReference Include="ThunderboltIoc" Version="$(Version)" />-->
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="6.0.0" />
     <PackageReference Include="Autofac" Version="6.3.0" />
     <PackageReference Include="Grace" Version="7.2.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\ThunderboltIoc.Abstractions\ThunderboltIoc.Abstractions.csproj" />
+    <ProjectReference Include="..\ThunderboltIoc.SourceGenerators\ThunderboltIoc.SourceGenerators.csproj"
+                      OutputItemType="Analyzer"
+                      ReferenceOutputAssembly="false"
+                      PrivateAssets="all"/>
   </ItemGroup>
   
 </Project>
