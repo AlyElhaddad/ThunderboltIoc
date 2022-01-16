@@ -39,7 +39,6 @@ internal sealed class ThunderboltContainer : IThunderboltContainer, IThunderbolt
     public object GetService(Type serviceType)
     {
         var genAcc = ThunderboltServiceRegistry.generic[serviceType];
-        //var (lifetimeGetter, factory, _, singletonInstanceGetter, _) = ThunderboltServiceRegistry.generic[serviceType];
         return genAcc.lifetimeGetter() switch
         {
             ThunderboltServiceLifetime.Transient => genAcc.factory(this),

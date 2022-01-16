@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
+    <TargetFrameworks>net48;netstandard2.0;netstandard2.1;net5.0;net6.0;netcoreapp3.1</TargetFrameworks>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <LangVersion>10</LangVersion>
@@ -17,7 +17,15 @@
 
   <ItemGroup>
     <ProjectReference Include="..\ThunderboltIoc.Abstractions\ThunderboltIoc.Abstractions.csproj" />
-    <ProjectReference Include="..\ThunderboltIoc.SourceGenerators\ThunderboltIoc.SourceGenerators.csproj" />
+    <ProjectReference Include="..\ThunderboltIoc.SourceGenerators\ThunderboltIoc.SourceGenerators.csproj"
+                      OutputItemType="Analyzer"
+                      ReferenceOutputAssembly="false"
+                      PrivateAssets="all"/>
   </ItemGroup>
-
+  
+  <ItemGroup>
+    <Using Remove="System.IO" />
+    <Using Remove="System.Linq" />
+    <Using Remove="System.Net.Http" />
+  </ItemGroup>
 </Project>

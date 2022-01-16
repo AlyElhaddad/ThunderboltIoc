@@ -26,13 +26,13 @@ internal readonly struct GenericRegistryAccessor
 internal static class ThunderboltServiceRegistry
 {
     internal static readonly Dictionary<int, List<Action>> scopeClearanceActions = new();
-    internal static readonly Dictionary<Type, GenericRegistryAccessor> generic = new();
+    internal static readonly Dictionary<Type, GenericRegistryAccessor> generic = new(capacity: 3); // this is first accessed via the container's ctor, into which we later add two more registrations, making it a total of 3 (container, scope, resolver)
 }
 internal static class ThunderboltServiceRegistry<T>
     where T : notnull
 {
     private static T? singletonInstance;
-    internal static readonly Dictionary<int, T> scopesInstances = new(capacity: 1);
+    internal static readonly Dictionary<int, T> scopesInstances = new();
 
     static ThunderboltServiceRegistry()
     {

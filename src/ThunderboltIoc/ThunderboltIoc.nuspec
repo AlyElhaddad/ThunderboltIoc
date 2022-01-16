@@ -2,7 +2,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2013/05/nuspec.xsd">
   <metadata>
     <id>ThunderboltIoc</id>
-    <version>1.2.0</version>
+    <version>1.2.1</version>
     <authors>Aly Elhaddad</authors>
     <owners>Aly Elhaddad</owners>
     <icon>images\thunderbolt_128.png</icon>
@@ -13,10 +13,36 @@
     <repository type="git" url="https://github.com/AlyElhaddad/ThunderboltIoc" branch="master"/>
     <readme>docs\README.md</readme>
     <title>ThunderboltIoc</title>
-    <description>A fully-fledged IoC that has zero reflection underneath the hood, that is based on roslyn and source generators.</description>
+    <description>A fully-fledged IoC framework that provides dependency injection and has no reflection underneath the hood, that is based on roslyn source generators.</description>
+    <summary>A fully-fledged IoC framework that provides dependency injection and has no reflection underneath the hood, that is based on roslyn source generators.</summary>
     <tags>Thunderbolt ThunderboltIoc roslyn analyzers code-generation ioc dependency-injection di inversion-of-control aot</tags>
     <dependencies>
-      <group targetFramework=".NETStandard2.0">
+      <group targetFramework="net48">
+        <dependency id="ThunderboltIoc.SourceGenerators" version="$version$"
+                    exclude="build,compile,runtime,contentFiles,native" include='analyzers'/>
+        <dependency id="ThunderboltIoc.Abstractions" version="$version$" exclude="build,analyzers"/>
+      </group>
+      <group targetFramework="netstandard2.0">
+        <dependency id="ThunderboltIoc.SourceGenerators" version="$version$"
+                    exclude="build,compile,runtime,contentFiles,native" include='analyzers'/>
+        <dependency id="ThunderboltIoc.Abstractions" version="$version$" exclude="build,analyzers"/>
+      </group>
+      <group targetFramework="netstandard2.1">
+        <dependency id="ThunderboltIoc.SourceGenerators" version="$version$"
+                    exclude="build,compile,runtime,contentFiles,native" include='analyzers'/>
+        <dependency id="ThunderboltIoc.Abstractions" version="$version$" exclude="build,analyzers"/>
+      </group>
+      <group targetFramework="net5.0">
+        <dependency id="ThunderboltIoc.SourceGenerators" version="$version$"
+                    exclude="build,compile,runtime,contentFiles,native" include='analyzers'/>
+        <dependency id="ThunderboltIoc.Abstractions" version="$version$" exclude="build,analyzers"/>
+      </group>
+      <group targetFramework="net6.0">
+        <dependency id="ThunderboltIoc.SourceGenerators" version="$version$"
+                    exclude="build,compile,runtime,contentFiles,native" include='analyzers'/>
+        <dependency id="ThunderboltIoc.Abstractions" version="$version$" exclude="build,analyzers"/>
+      </group>
+      <group targetFramework="netcoreapp3.1">
         <dependency id="ThunderboltIoc.SourceGenerators" version="$version$"
                     exclude="build,compile,runtime,contentFiles,native" include='analyzers'/>
         <dependency id="ThunderboltIoc.Abstractions" version="$version$" exclude="build,analyzers"/>
