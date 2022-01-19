@@ -14,7 +14,8 @@ I&apos;m also open to your suggestions. Feel free to contact me on twitter [@aly
 
 #### Document outline
 - [1. Installation](#1-installation)
-  - [Implement ThunderboltRegistration as a partial class](#implement-thunderboltregistration-as-a-partial-class)
+  - [1.1. Make sure that you're using C# version 9.0 or later](#11-make-sure-that-youre-using-c-version-90-or-later)
+  - [1.2. Implement ThunderboltRegistration as a partial class](#12-implement-thunderboltregistration-as-a-partial-class)
 - [2. Quick start](#2-quick-start)
   - [2.1. Anywhere in your assembly FooAssembly](#21-anywhere-in-your-assembly-fooassembly)
   - [2.2. At your startup code](#22-at-your-startup-code)
@@ -59,7 +60,7 @@ or using Nuget Package Manager Console:
 ```
 Install-Package ThunderboltIoc
 ```
-### 1.2. Make sure that you&apos;re using C# version 9.0 or later
+### 1.1. Make sure that you&apos;re using C# version 9.0 or later
 In each of your projects where ThunderboltIoc is referenced, make sure that the C# version used is `9.0` or later. In your `*.csproj` add:
 ```csharp
 <PropertyGroup>
