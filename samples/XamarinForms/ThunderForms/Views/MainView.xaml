@@ -5,9 +5,12 @@
              xmlns:viewModels="clr-namespace:ThunderForms.ViewModels"
              xmlns:models="clr-namespace:ThunderForms.Models"
              x:DataType="viewModels:MainViewModel"
-             x:Class="ThunderForms.Views.MainView"
-             BindingContext="{markupExt:ThunderboltResolve Type={Type viewModels:MainViewModel}}">
-
+             x:Class="ThunderForms.Views.MainView">
+    <!--If you prefer the non-generic version:-->
+    <!--BindingContext="{markupExt:ThunderboltResolve Type={Type viewModels:MainViewModel}}"-->
+    <ContentPage.BindingContext>
+        <markupExt:ThunderboltResolveExtension x:TypeArguments="viewModels:MainViewModel" />
+    </ContentPage.BindingContext>
     <Grid>
         <StackLayout VerticalOptions="Center" HorizontalOptions="Center">
             <Label>
@@ -35,5 +38,4 @@
             </StackLayout>
         </StackLayout>
     </Grid>
-
 </ContentPage>
