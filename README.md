@@ -59,7 +59,15 @@ or using Nuget Package Manager Console:
 ```
 Install-Package ThunderboltIoc
 ```
-## Implement `ThunderboltRegistration` as a **partial** class
+### 1.2. Make sure that you&apos;re using C# version 9.0 or later
+In each of your projects where ThunderboltIoc is referenced, make sure that the C# version used is `9.0` or later. In your `*.csproj` add:
+```csharp
+<PropertyGroup>
+    <LangVersion>9.0</LangVersion>
+</PropertyGroup>
+```
+Please note that C# `9.0` is supported only in Visual Studio 2022, and Visual Studio 2019 starting from version `16.7`.
+### 1.2. Implement `ThunderboltRegistration` as a **partial** class
 This step is not needed if you don&apos;t have any types/services that you would like to register in this assembly. However, if you do (which is likely), you should create a **partial** class that implements the `ThunderboltRegistration` abstract class. More on the registration can be found in the relevant section of this document.
 
 # 2. Quick start
