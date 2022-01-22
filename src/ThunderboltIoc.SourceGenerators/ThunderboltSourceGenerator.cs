@@ -22,7 +22,7 @@ public class ThunderboltSourceGenerator : ISourceGenerator
 
     public void Execute(GeneratorExecutionContext context)
     {
-          //this is for the purpose of debugging the source generator itself and can be ignored
+//        //this is for the purpose of debugging the source generator itself and can be ignored
 //#if DEBUG
 //        if (!System.Diagnostics.Debugger.IsAttached)
 //        {

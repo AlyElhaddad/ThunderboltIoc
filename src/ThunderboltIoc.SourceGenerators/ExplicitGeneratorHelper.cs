@@ -74,14 +74,19 @@ internal static class ExplicitGeneratorHelper
                     }
                     //implSelector signature
                     ArgumentSyntax arg = syntax.ArgumentList.Arguments[0];
-                    BlockSyntax implSelectorBlockStatement;
+                    IEnumerable<TypeOfExpressionSyntax>? typeofStatements = null;
+                    //BlockSyntax implSelectorBlockStatement;
                     if (arg.Expression is ParenthesizedLambdaExpressionSyntax lambdaExpr)
                     { // () => { }
-                        implSelectorBlockStatement = lambdaExpr.Block ?? throw new MissingMethodException();
+                        typeofStatements
+                            = lambdaExpr.Block?.DescendantNodes()?.OfType<ReturnStatementSyntax>()?.Select(ret => ret.Expression)?.OfType<TypeOfExpressionSyntax>()
+                            ?? (lambdaExpr.ExpressionBody is TypeOfExpressionSyntax typeofExpr ? typeofExpr : null)?.AsEnumerable()
+                            .NullIfEmpty();
                     }
                     else if (arg.Expression is AnonymousMethodExpressionSyntax anonymousExpr)
                     { // delegate { }
-                        implSelectorBlockStatement = anonymousExpr.Block ?? throw new MissingMethodException();
+                        typeofStatements
+                            = anonymousExpr.Block?.DescendantNodes().OfType<ReturnStatementSyntax>().Select(ret => ret.Expression).OfType<TypeOfExpressionSyntax>().NullIfEmpty();
                     }
                     else
                     {
@@ -91,11 +96,7 @@ internal static class ExplicitGeneratorHelper
                     yield return
                         (serviceType,
                         null,
-                        implSelectorBlockStatement
-                            .DescendantNodes()
-                            .OfType<ReturnStatementSyntax>()
-                            .Select(ret => ret.Expression)
-                            .OfType<TypeOfExpressionSyntax>()
+                        typeofStatements
                             .Select(typeOfExpr => semanticModel.GetSpeculativeTypeInfo(typeOfExpr.Type.SpanStart, typeOfExpr.Type, SpeculativeBindingOption.BindAsTypeOrNamespace).Type)
                             .OfType<INamedTypeSymbol>(),
                         false);

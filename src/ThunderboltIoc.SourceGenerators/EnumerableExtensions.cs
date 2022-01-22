@@ -32,5 +32,11 @@
         }
         public static IEnumerable<T> WhereIf<T>(this IEnumerable<T> source, bool condition, Func<T, bool> predicate)
             => condition ? source.Where(predicate) : source;
+        public static IEnumerable<T>? NullIfEmpty<T>(this IEnumerable<T>? source)
+            => source?.Any() == true ? source : null;
+        public static IEnumerable<T> AsEnumerable<T>(this T obj)
+        {
+            yield return obj;
+        }
     }
 }
