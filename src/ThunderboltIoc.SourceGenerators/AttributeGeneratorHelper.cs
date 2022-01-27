@@ -6,21 +6,21 @@ namespace ThunderboltIoc.SourceGenerators;
 
 internal static class AttributeGeneratorHelper
 {
-    private class SymbolValueTupleEqualityComparer : IEqualityComparer<(INamedTypeSymbol, INamedTypeSymbol?, int)>
+    private class SymbolServiceDescriptorEqualityComparer : IEqualityComparer<ServiceDescriptor>
     {
         private static readonly EqualityComparer<string> comparer = EqualityComparer<string>.Default;
-        public static readonly SymbolValueTupleEqualityComparer Default = new();
+        public static readonly SymbolServiceDescriptorEqualityComparer Default = new();
 
-        private SymbolValueTupleEqualityComparer() { }
+        private SymbolServiceDescriptorEqualityComparer() { }
 
-        public bool Equals((INamedTypeSymbol, INamedTypeSymbol?, int) x, (INamedTypeSymbol, INamedTypeSymbol?, int) y)
+        public bool Equals(ServiceDescriptor x, ServiceDescriptor y)
         {
-            return comparer.Equals(x.Item1.GetFullyQualifiedName(), y.Item1.GetFullyQualifiedName());
+            return comparer.Equals(x.ServiceSymbol.GetFullyQualifiedName(), y.ServiceSymbol.GetFullyQualifiedName());
         }
 
-        public int GetHashCode((INamedTypeSymbol, INamedTypeSymbol?, int) obj)
+        public int GetHashCode(ServiceDescriptor obj)
         {
-            return comparer.GetHashCode(obj.Item1.GetFullyQualifiedName());
+            return comparer.GetHashCode(obj.ServiceSymbol.GetFullyQualifiedName());
         }
     }
 
@@ -52,7 +52,7 @@ internal static class AttributeGeneratorHelper
             .OfType<(AttributeData, string)>();
     }
 
-    private static IEnumerable<(INamedTypeSymbol type, INamedTypeSymbol? impl, int serviceLifetime)> IncludedTypes(Compilation compilation)
+    private static IEnumerable<ServiceDescriptor> IncludedTypes(Compilation compilation)
     {
         var allTypes = compilation.GetAllTypeMembers();
         var typeAttrs = GetTypeAttributes(compilation);
@@ -86,10 +86,10 @@ internal static class AttributeGeneratorHelper
             }
         }
 
-        return inclusions.WhereIf(exclusions.Any(), incl => !exclusions.Any(excl => incl.type.GetFullyQualifiedName() == excl.GetFullyQualifiedName()));
+        return inclusions.WhereIf(exclusions.Any(), incl => !exclusions.Any(excl => incl.type.GetFullyQualifiedName() == excl.GetFullyQualifiedName())).Select(incl => new ServiceDescriptor(incl.serviceLifetime, incl.type, incl.impl, null, false, true));
     }
 
-    private static IEnumerable<(INamedTypeSymbol type, INamedTypeSymbol? impl, int serviceLifetime)> IncludedRegexTypes(Compilation compilation)
+    private static IEnumerable<ServiceDescriptor> IncludedRegexTypes(Compilation compilation)
     {
         var allTypes = compilation.GetAllTypeMembers();
         var assemblyAttrs = GetAssemblyAttributes(compilation);
@@ -140,12 +140,12 @@ internal static class AttributeGeneratorHelper
 
         return inclusions
             .WhereIf(exclusions.Any(), incl => !exclusions.Any(excl => excl.typeFullName == incl.typeFullName))
-            .Select(incl => (incl.type, incl.impl, incl.servcieLifetime));
+            .Select(incl => new ServiceDescriptor(incl.servcieLifetime, incl.type, incl.impl, null, false, true));
     }
 
-    internal static IEnumerable<(INamedTypeSymbol type, INamedTypeSymbol? impl, int serviceLifetime)> AllIncludedTypes(Compilation compilation)
+    internal static IEnumerable<ServiceDescriptor> AllIncludedTypes(Compilation compilation)
     {
         return IncludedTypes(compilation)
-            .Union(IncludedRegexTypes(compilation), SymbolValueTupleEqualityComparer.Default);
+            .Union(IncludedRegexTypes(compilation), SymbolServiceDescriptorEqualityComparer.Default);
     }
 }

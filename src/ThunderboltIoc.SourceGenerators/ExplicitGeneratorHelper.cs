@@ -2,8 +2,6 @@
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Operations;
 
-using System.Text;
-
 namespace ThunderboltIoc.SourceGenerators;
 
 internal static class ExplicitGeneratorHelper
@@ -22,7 +20,7 @@ internal static class ExplicitGeneratorHelper
         //  I have therefore decided to make the last comparison by types' full names as strings instead.
     }
 
-    internal static IEnumerable<(INamedTypeSymbol service, INamedTypeSymbol? impl, IEnumerable<INamedTypeSymbol>? selectorImpls, bool hasFactory)> TypesToRegister(IEnumerable<(MethodDeclarationSyntax methodDecl, SemanticModel semanticModel)> overriddenRegisterDeclarations, HashSet<IMethodSymbol> registrarNonFactoryMethods)
+    internal static IEnumerable<ServiceDescriptor> TypesToRegister(IEnumerable<(MethodDeclarationSyntax methodDecl, SemanticModel semanticModel)> overriddenRegisterDeclarations, HashSet<IMethodSymbol> registrarNonFactoryMethods)
     {
         foreach (var (registerDecl, semanticModel) in overriddenRegisterDeclarations)
         {
@@ -48,7 +46,13 @@ internal static class ExplicitGeneratorHelper
                         //1 or 2 generic args - a redundant/double check just to be sure
                         if (semanticModel.GetSpeculativeTypeInfo(serviceArg.SpanStart, serviceArg, SpeculativeBindingOption.BindAsTypeOrNamespace).Type is INamedTypeSymbol serviceType)
                         {
-                            yield return (serviceType, null, null, false);
+                            yield return new ServiceDescriptor(
+                                lifetime: null,
+                                serviceSymbol: serviceType,
+                                implSymbol: null,
+                                implSelectorSymbols: null,
+                                hasFactory: false,
+                                registeredByAttribute: false);
                         }
                     }
                     else if (genericName.TypeArgumentList.Arguments.Count == 2)
@@ -57,7 +61,13 @@ internal static class ExplicitGeneratorHelper
                         if (semanticModel.GetSpeculativeTypeInfo(serviceArg.SpanStart, serviceArg, SpeculativeBindingOption.BindAsTypeOrNamespace).Type is INamedTypeSymbol serviceType
                             && semanticModel.GetSpeculativeTypeInfo(implArg.SpanStart, implArg, SpeculativeBindingOption.BindAsTypeOrNamespace).Type is INamedTypeSymbol implType)
                         {
-                            yield return (serviceType, implType, null, false);
+                            yield return new ServiceDescriptor(
+                                lifetime: null,
+                                serviceSymbol: serviceType,
+                                implSymbol: implType,
+                                implSelectorSymbols: null,
+                                hasFactory: false,
+                                registeredByAttribute: false);
                         }
                     }
                 }
@@ -69,13 +79,18 @@ internal static class ExplicitGeneratorHelper
                     if (op.TargetMethod.OriginalDefinition.Name.EndsWith(Consts.FactorySuffix))
                     {
                         //factory
-                        yield return (serviceType, null, null, true);
+                        yield return new ServiceDescriptor(
+                            lifetime: null,
+                            serviceSymbol: serviceType,
+                            implSymbol: null,
+                            implSelectorSymbols: null,
+                            hasFactory: true,
+                            registeredByAttribute: false);
                         continue;
                     }
                     //implSelector signature
                     ArgumentSyntax arg = syntax.ArgumentList.Arguments[0];
                     IEnumerable<TypeOfExpressionSyntax>? typeofStatements = null;
-                    //BlockSyntax implSelectorBlockStatement;
                     if (arg.Expression is ParenthesizedLambdaExpressionSyntax lambdaExpr)
                     { // () => { }
                         typeofStatements
@@ -90,16 +105,19 @@ internal static class ExplicitGeneratorHelper
                     }
                     else
                     {
-                        continue; //better than failure for now.
-                        //throw new MissingMethodException();
+                        //undocumented syntax, it's oaky to ignore it.
+                        continue;
                     }
-                    yield return
-                        (serviceType,
-                        null,
-                        typeofStatements
-                            .Select(typeOfExpr => semanticModel.GetSpeculativeTypeInfo(typeOfExpr.Type.SpanStart, typeOfExpr.Type, SpeculativeBindingOption.BindAsTypeOrNamespace).Type)
-                            .OfType<INamedTypeSymbol>(),
-                        false);
+                    yield return new ServiceDescriptor(
+                        lifetime: null,
+                        serviceSymbol: serviceType,
+                        implSymbol: null,
+                        implSelectorSymbols:
+                            typeofStatements
+                                .Select(typeOfExpr => semanticModel.GetSpeculativeTypeInfo(typeOfExpr.Type.SpanStart, typeOfExpr.Type, SpeculativeBindingOption.BindAsTypeOrNamespace).Type)
+                                .OfType<INamedTypeSymbol>(),
+                        hasFactory: false,
+                        registeredByAttribute: false);
                 }
             }
         }

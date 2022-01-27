@@ -53,11 +53,9 @@ public class ThunderboltSourceGenerator : ISourceGenerator
 
             var allTypes
                 = attributeRegistration
-                    .WhereIf(explicitRegistration.Any(), attrReg => !explicitRegistration.Any(explReg => attrReg.type.GetFullyQualifiedName() == explReg.service.GetFullyQualifiedName()))
-                    .Select(attrReg => (lifetime: (int?)attrReg.serviceLifetime, service: attrReg.type, attrReg.impl, selectorImpls: default(IEnumerable<INamedTypeSymbol>), hasFactory: false, staticRegister: true))
+                    .WhereIf(explicitRegistration.Any(), attrReg => !explicitRegistration.Any(explReg => attrReg.ServiceSymbol.GetFullyQualifiedName() == explReg.ServiceSymbol.GetFullyQualifiedName()))
                     .Concat(
-                        explicitRegistration
-                        .Select(explReg => (lifetime: default(int?), explReg.service, explReg.impl, explReg.selectorImpls, explReg.hasFactory, staticRegister: false)));
+                        explicitRegistration);
 
             if (!allTypes.Any())
                 continue;
