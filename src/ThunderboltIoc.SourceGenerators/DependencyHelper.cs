@@ -29,10 +29,34 @@ internal static class DependencyHelper
     {
         return FindBestCtors(symbol, services.Select(service => service.ServiceSymbol));
     }
-
+    internal static IEnumerable<(IPropertySymbol prop, ServiceDescriptor service)> GetInjectedProperties(INamedTypeSymbol symbol, IEnumerable<ServiceDescriptor> services)
+    {
+        return
+            symbol
+            .PublicSetProperties()
+            .Select(prop =>
+            {
+                string propTypeName = prop.Type.GetFullyQualifiedName();
+                var service = services.FirstOrDefault(service => service.ServiceSymbol.GetFullyQualifiedName() == propTypeName);
+                return (prop, service);
+            })
+            .Where(item => item.service.ServiceSymbol is not null);
+    }
     private static IEnumerable<ServiceDescriptor> GetDependencies(ServiceDescriptor serviceDescriptor, IEnumerable<ServiceDescriptor> services)
     {
-        return serviceDescriptor.GetPossibleImplementations(services).SelectMany(symbol => FindBestCtors(symbol, services).First().Parameters.Select(p => p.Type).OfType<INamedTypeSymbol>().Select(type => services.First(service => type.GetFullyQualifiedName() == service.ServiceSymbol.GetFullyQualifiedName())));
+        return
+            serviceDescriptor
+            .GetPossibleImplementations(services)
+            .SelectMany(symbol =>
+                FindBestCtors(symbol, services)
+                .First()
+                .Parameters
+                .Select(p => p.Type)
+                .OfType<INamedTypeSymbol>()
+                .Select(type => services.First(service => type.GetFullyQualifiedName() == service.ServiceSymbol.GetFullyQualifiedName()))
+                .Concat(
+                    GetInjectedProperties(symbol, services)
+                    .Select(prop => prop.service)));
     }
 
     internal static bool HasCyclicDependencies(

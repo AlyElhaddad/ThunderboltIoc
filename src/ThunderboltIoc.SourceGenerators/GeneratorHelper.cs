@@ -8,7 +8,7 @@ internal static class GeneratorHelper
 {
     private static string GenerateTypeCtorCall(INamedTypeSymbol type, IEnumerable<ServiceDescriptor> allServices)
     {
-        //new T(resolver.Get<TDependency1>(), resolver.Get<TDependency2>())
+        //new T(resolver.Get<TDependency1>(), resolver.Get<TDependency2>()) { InjectedProperty1 = resolver.Get<InjectedProperty1ServiceType>() }
 
         string fullyQualifiedName = type.GetFullyQualifiedName();
         var ctor = DependencyHelper.FindBestCtors(type, allServices).First();
@@ -31,6 +31,13 @@ internal static class GeneratorHelper
             builder.Append(">()");
         }
         builder.Append(')');
+        var injectedProperties = DependencyHelper.GetInjectedProperties(type, allServices);
+        if (injectedProperties.Any())
+        {
+            builder.Append(" { ");
+            builder.Append(string.Join(", ", injectedProperties.Select(prop => $"{prop.prop.Name} = resolver.Get<{prop.service.ServiceSymbol.GetFullyQualifiedName()}>()")));
+            builder.Append(" }");
+        }
         return builder.ToString();
     }
 

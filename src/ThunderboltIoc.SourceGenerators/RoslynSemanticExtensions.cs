@@ -82,4 +82,22 @@ internal static class RoslynSemanticExtensions
             && method.Parameters.Length == equalMethod.Parameters.Length
             && method.Parameters.IndexTupleJoin(equalMethod.Parameters).All(item => item.left.Type.GetFullyQualifiedName() == item.right.Type.GetFullyQualifiedName()));
     }
+    public static IEnumerable<ISymbol> GetMembersAndInheritedMembers(this ITypeSymbol? typeSymbol)
+    {
+        while(typeSymbol != null)
+        {
+            foreach (ISymbol symbol in typeSymbol.GetMembers())
+                yield return symbol;
+            typeSymbol = typeSymbol.BaseType;
+        }
+    }
+    public static IEnumerable<IPropertySymbol> PublicSetProperties(this INamedTypeSymbol namedTypeSymbol)
+    {
+        return
+            namedTypeSymbol
+            .GetMembersAndInheritedMembers()
+            .OfType<IPropertySymbol>()
+            .Where(prop => prop.SetMethod is IMethodSymbol setMethod
+                        && setMethod.DeclaredAccessibility == Accessibility.Public);
+    }
 }

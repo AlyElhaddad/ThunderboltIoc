@@ -2,7 +2,6 @@
 using Microsoft.CodeAnalysis.CSharp;
 
 using System.Diagnostics;
-using System.Xml.Linq;
 
 namespace ThunderboltIoc.SourceGenerators;
 
@@ -12,24 +11,24 @@ public class ThunderboltSourceGenerator : ISourceGenerator
     public void Initialize(GeneratorInitializationContext context)
     {
         //this is for the purpose of debugging the source generator itself and can be ignored
-//#if DEBUG
-//        if (!System.Diagnostics.Debugger.IsAttached)
-//        {
-//            System.Diagnostics.Debugger.Launch();
-//        }
-//#endif
+        //#if DEBUG
+        //        if (!System.Diagnostics.Debugger.IsAttached)
+        //        {
+        //            System.Diagnostics.Debugger.Launch();
+        //        }
+        //#endif
         context.RegisterForSyntaxNotifications(() => new SyntaxContextReceiver());
     }
 
     public void Execute(GeneratorExecutionContext context)
     {
         //        //this is for the purpose of debugging the source generator itself and can be ignored
-//#if DEBUG
-//        if (!System.Diagnostics.Debugger.IsAttached)
-//        {
-//            System.Diagnostics.Debugger.Launch();
-//        }
-//#endif
+        //#if DEBUG
+        //        if (!System.Diagnostics.Debugger.IsAttached)
+        //        {
+        //            System.Diagnostics.Debugger.Launch();
+        //        }
+        //#endif
 
         INamedTypeSymbol? registrarTypeSymbol = GetRegistrarTypeSymbol(context.Compilation);
         HashSet<IMethodSymbol>? registrarNonFactoryMethods = GetRegistrarNonFactoryMethods(registrarTypeSymbol);
@@ -98,7 +97,7 @@ $@"namespace {symbol.ContainingNamespace.GetFullNamespaceName().RemovePrefix(Con
     }
     internal static HashSet<IMethodSymbol> GetRegistrarNonFactoryMethods(INamedTypeSymbol? registrarTypeSymbol)
     {
-        return new (registrarTypeSymbol?.GetMembers().OfType<IMethodSymbol>().Select(m => m.OriginalDefinition) ?? Enumerable.Empty<IMethodSymbol>(), MethodDefinitionEqualityComparer.Default);
+        return new(registrarTypeSymbol?.GetMembers().OfType<IMethodSymbol>().Select(m => m.OriginalDefinition) ?? Enumerable.Empty<IMethodSymbol>(), MethodDefinitionEqualityComparer.Default);
 #pragma warning restore RS1024 // Symbols should be compared for equality
     }
 }
