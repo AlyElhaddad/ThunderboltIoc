@@ -38,5 +38,40 @@
         {
             yield return obj;
         }
+        public static IEnumerable<T> MoveSafely<T>(this IEnumerable<T> source, Func<Exception, T> failureItem)
+        {
+            if (source is null)
+                throw new ArgumentNullException(nameof(source));
+
+            IEnumerator<T> enumerator = source.GetEnumerator();
+            while (true)
+            {
+                bool movedNext;
+                Exception? exception = null;
+                try
+                {
+                    movedNext = enumerator.MoveNext();
+                }
+                catch (Exception ex)
+                {
+                    movedNext = false;
+                    exception = ex;
+                }
+                if (movedNext)
+                {
+                    yield return enumerator.Current;
+                }
+                else if (exception is not null)
+                {
+                    //If you throw an exception in failureItem, you deserve it. I ain't gonna handle that.
+                    yield return failureItem(exception);
+                }
+                else
+                {
+                    break;
+                }
+            }
+            enumerator.Dispose();
+        }
     }
 }

@@ -9,6 +9,12 @@ public static class StringExtensions
             return str;
         return str.Substring(prefix.Length);
     }
+    public static string WithSuffix(this string str, string suffix)
+    {
+        if (str.IsNull() || str.EndsWith(suffix))
+            return str;
+        return $"{str}{suffix}";
+    }
     public static string AddIndentation(this string str, ushort indentationLength)
     {
         if (str.IsNull() || indentationLength == 0)

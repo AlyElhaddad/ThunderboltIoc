@@ -61,6 +61,10 @@ internal static class RoslynSemanticExtensions
         SemanticModel semanticModel = compilation.GetSemanticModel(compilation.SyntaxTrees.First());
         return semanticModel.GetSpeculativeTypeInfo(0, SyntaxFactory.ParseTypeName(fullName), SpeculativeBindingOption.BindAsTypeOrNamespace).Type as INamedTypeSymbol;
     }
+    public static INamedTypeSymbol? GetTypeByFullName(this SemanticModel semanticModel, string fullName)
+    {
+        return semanticModel.GetSpeculativeTypeInfo(0, SyntaxFactory.ParseTypeName(fullName), SpeculativeBindingOption.BindAsTypeOrNamespace).Type as INamedTypeSymbol;
+    }
 
     public static string GetMethodFullName(this IMethodSymbol method)
     {

@@ -3,6 +3,7 @@
 internal static class Consts
 {
     internal const string mainNs = "ThunderboltIoc";
+    internal const string registrationClass = "ThunderboltRegistration";
     internal const string activatorClass = "ThunderboltActivator";
     internal const string registrarInterface = "IThunderboltRegistrar";
     internal const string global = "global::";
@@ -14,6 +15,7 @@ internal static class Consts
     internal const string Scoped = "Scoped";
     internal const string Transient = "Transient";
 
+    internal const string RegistrationTypeFullName = $"{global}{mainNs}.{registrationClass}";
     internal const string ActivatorTypeFullName = $"{global}{mainNs}.{activatorClass}";
     internal const string IIocRegistrarTypeFullName = $"{global}{mainNs}.{registrarInterface}";
     internal const string IIocDictatorTypeFullName = $"{global}{mainNs}.IThunderboltFactoryDictator";

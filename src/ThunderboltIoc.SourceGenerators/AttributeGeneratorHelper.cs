@@ -6,23 +6,6 @@ namespace ThunderboltIoc.SourceGenerators;
 
 internal static class AttributeGeneratorHelper
 {
-    private class SymbolServiceDescriptorEqualityComparer : IEqualityComparer<ServiceDescriptor>
-    {
-        private static readonly EqualityComparer<string> comparer = EqualityComparer<string>.Default;
-        public static readonly SymbolServiceDescriptorEqualityComparer Default = new();
-
-        private SymbolServiceDescriptorEqualityComparer() { }
-
-        public bool Equals(ServiceDescriptor x, ServiceDescriptor y)
-        {
-            return comparer.Equals(x.ServiceSymbol.GetFullyQualifiedName(), y.ServiceSymbol.GetFullyQualifiedName());
-        }
-
-        public int GetHashCode(ServiceDescriptor obj)
-        {
-            return comparer.GetHashCode(obj.ServiceSymbol.GetFullyQualifiedName());
-        }
-    }
 
     private static IEnumerable<((AttributeData data, string attrTypeName) attr, INamedTypeSymbol type)> GetTypeAttributes(Compilation compilation)
     {
@@ -146,6 +129,6 @@ internal static class AttributeGeneratorHelper
     internal static IEnumerable<ServiceDescriptor> AllIncludedTypes(Compilation compilation)
     {
         return IncludedTypes(compilation)
-            .Union(IncludedRegexTypes(compilation), SymbolServiceDescriptorEqualityComparer.Default);
+            .Union(IncludedRegexTypes(compilation));
     }
 }
