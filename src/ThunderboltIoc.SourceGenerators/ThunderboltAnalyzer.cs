@@ -308,9 +308,6 @@ public class ThunderboltAnalyzer : DiagnosticAnalyzer
               "Design",
               DiagnosticSeverity.Error,
               isEnabledByDefault: true);
-
-        //TODO: prevent registering interface/abstract class without specifying implementation
-        //TOOD: prevent interface/abstract class implementation (unless it is a registered service)
     }
     #endregion
 }

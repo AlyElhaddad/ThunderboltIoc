@@ -3,12 +3,16 @@
 public static class StringExtensions
 {
     public static bool IsNull(this string str) => str is null;
+
+#pragma warning disable IDE0057 // Use range operator
     public static string RemovePrefix(this string str, string prefix)
     {
         if (string.IsNullOrEmpty(str) || !str.StartsWith(prefix))
             return str;
         return str.Substring(prefix.Length);
     }
+#pragma warning restore IDE0057 // Use range operator
+
     public static string WithSuffix(this string str, string suffix)
     {
         if (str.IsNull() || str.EndsWith(suffix))

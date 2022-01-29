@@ -19,7 +19,7 @@ internal static class DependencyHelper
                               return services.Any(s => s.GetFullyQualifiedName() == typeName);
                           });
               }).OrderBy(ctor => ctor.Parameters.Length);
-        if (!bestCtorsSorted.Any())
+        if (symbol.IsAbstract || !bestCtorsSorted.Any())
         {
             throw new MissingMethodException($"Could not find a suitable constructor for type '{symbol.GetFullyQualifiedName().RemovePrefix(Consts.global)}'.");
         }
