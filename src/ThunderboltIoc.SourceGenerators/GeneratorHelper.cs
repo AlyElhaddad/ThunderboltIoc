@@ -44,8 +44,7 @@ internal static class GeneratorHelper
             string serviceImpName = serviceImp.GetFullyQualifiedName();
             if (allServices.FirstOrDefault(serviceDescriptor => serviceDescriptor.ServiceSymbol.GetFullyQualifiedName() == serviceImpName) is ServiceDescriptor serviceDescriptor && serviceDescriptor.ServiceSymbol is not null)
             {
-                returned =
-$@"resolver.Get<{serviceDescriptor.ServiceSymbol.GetFullyQualifiedName()}>()";
+                returned = GenerateDictateValue(serviceDescriptor, allServices, serviceImpName);
             }
             else
             {
@@ -68,35 +67,38 @@ $@"resolver.Get<{serviceDescriptor.ServiceSymbol.GetFullyQualifiedName()}>()";
         //        SyntaxFactory.IdentifierName("factories"),
         //        SyntaxFactory.IdentifierName("Add")))
         //    .WithArgumentList(SyntaxFactory.ArgumentList(new SeparatedSyntaxList<ArgumentSyntax>().));
-
         string fullyQualifiedName = serviceDescriptor.ServiceSymbol.GetFullyQualifiedName();
         if (serviceDescriptor.ServiceSymbol.TypeKind is not TypeKind.Class and not TypeKind.Interface and not TypeKind.Struct)
             throw new NotSupportedException($"Only interfaces, classes and structs are supported. The registered type '{fullyQualifiedName}', however, is '{serviceDescriptor.ServiceSymbol.TypeKind}'.");
 
+        return
+$@"dictator.Dictate<{fullyQualifiedName}>((resolver, implSelector, userFactory) => {GenerateDictateValue(serviceDescriptor, allServices, fullyQualifiedName)});";
+    }
+
+    private static string GenerateDictateValue(ServiceDescriptor serviceDescriptor, IEnumerable<ServiceDescriptor> allServices, string fullyQualifiedName)
+    {
+
         if (serviceDescriptor.HasFactory)
         {
-            return
-$@"dictator.Dictate<{fullyQualifiedName}>((resolver, implSelector, userFactory) => userFactory());";
+            return "userFactory()";
         }
         if (serviceDescriptor.ImplSelectorSymbols is not null)
         {
             return
-$@"dictator.Dictate<{fullyQualifiedName}>((resolver, implSelector, userFactory) =>
+$@"
 {{
 {GenerateImplSelector(serviceDescriptor.ServiceSymbol, serviceDescriptor.ImplSelectorSymbols, allServices).AddIndentation(1)}
-}});";
+}}";
         }
         if (serviceDescriptor.ImplSymbol is not null)
         {
             string implName = serviceDescriptor.ImplSymbol.GetFullyQualifiedName();
             if (allServices.FirstOrDefault(service => service.ServiceSymbol.GetFullyQualifiedName() == implName) is ServiceDescriptor implServiceDescriptor && implServiceDescriptor.ServiceSymbol is not null)
             {
-                return
-$@"dictator.Dictate<{fullyQualifiedName}>((resolver, implSelector, userFactory) => resolver.Get<{implServiceDescriptor.ServiceSymbol.GetFullyQualifiedName()}>());";
+                return GenerateDictateValue(implServiceDescriptor, allServices, implName);
             }
         }
-        return
-$@"dictator.Dictate<{fullyQualifiedName}>((resolver, implSelector, userFactory) => {GenerateTypeCtorCall(serviceDescriptor.ImplSymbol ?? serviceDescriptor.ServiceSymbol, allServices)});";
+        return $@"{GenerateTypeCtorCall(serviceDescriptor.ImplSymbol ?? serviceDescriptor.ServiceSymbol, allServices)}";
     }
     private static string GenerateDictates(IEnumerable<ServiceDescriptor> allTypes, IEnumerable<ServiceDescriptor> allServices)
     {
