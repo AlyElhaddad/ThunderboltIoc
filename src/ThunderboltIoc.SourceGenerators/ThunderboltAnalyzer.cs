@@ -145,6 +145,23 @@ public class ThunderboltAnalyzer : DiagnosticAnalyzer
             Location location = classDeclaration.Identifier.GetLocation();
 
             Parallel.Invoke(
+            #region TopLevelRegistration
+        () =>
+        {
+            try
+            {
+                if (namedTypeSymbol.ContainingSymbol is not INamespaceSymbol namespaceSymbol
+                    || !namespaceSymbol.IsNamespace)
+                {
+                    context.ReportDiagnostic(Diagnostic.Create(Descriptors.TopLevelRegistration, location, name));
+                }
+            }
+            catch (Exception ex)
+            {
+                context.ReportDiagnostic(Diagnostic.Create(Descriptors.AnalyzerException, null, $"{ex}{Environment.NewLine}{ex.StackTrace}"));
+            }
+        },
+            #endregion
             #region RegistrationNotAttached
         () =>
         {
@@ -216,7 +233,8 @@ public class ThunderboltAnalyzer : DiagnosticAnalyzer
             Descriptors.MissingRegistration,
             Descriptors.GenerationFailureForType,
             Descriptors.NoSuitableConstructor,
-            Descriptors.CyclicDependencies
+            Descriptors.CyclicDependencies,
+            Descriptors.TopLevelRegistration
     );
     private static class Descriptors
     {
@@ -282,6 +300,14 @@ public class ThunderboltAnalyzer : DiagnosticAnalyzer
                 "Design",
                 DiagnosticSeverity.Error,
                 isEnabledByDefault: true);
+
+        internal static DiagnosticDescriptor TopLevelRegistration
+          = new("TB207",
+              nameof(TopLevelRegistration),
+              $"The class '{{0}}' that implements '{Consts.registrationClass}' must be a top-level (not nested) class. It is currently not.",
+              "Design",
+              DiagnosticSeverity.Error,
+              isEnabledByDefault: true);
 
         //TODO: Registration class must be a top-level class
         //TODO: prevent registering interface/abstract class without specifying implementation

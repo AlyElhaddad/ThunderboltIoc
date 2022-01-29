@@ -20,12 +20,12 @@ internal static class RoslynSemanticExtensions
 
     public static string GetFullyQualifiedName(this ITypeSymbol typeSymbol)
     {
-        return $"{typeSymbol.ContainingNamespace.GetFullNamespaceName()}.{typeSymbol.Name}";
+        return $"{(typeSymbol.ContainingType is INamedTypeSymbol containingType ? containingType.GetFullyQualifiedName() : typeSymbol.ContainingNamespace.GetFullNamespaceName())}.{typeSymbol.Name}";
     }
 
     public static string GetFullyQualifiedName(this INamedTypeSymbol namedTypeSymbol)
     {
-        return $"{namedTypeSymbol.ContainingNamespace.GetFullNamespaceName()}.{namedTypeSymbol.Name}{(namedTypeSymbol.IsGenericType ? $"<{string.Join(", ", namedTypeSymbol.TypeArguments.Select(p => p.Name))}>" : "")}";
+        return $"{(namedTypeSymbol.ContainingType is INamedTypeSymbol containingType ? containingType.GetFullyQualifiedName() : namedTypeSymbol.ContainingNamespace.GetFullNamespaceName())}.{namedTypeSymbol.Name}{(namedTypeSymbol.IsGenericType ? $"<{string.Join(", ", namedTypeSymbol.TypeArguments.Select(p => p.Name))}>" : "")}";
     }
 
     public static IEnumerable<INamedTypeSymbol> GetAllTypeMembers(this INamespaceSymbol namespaceSymbol)
