@@ -37,9 +37,11 @@ public class ThunderboltSourceGenerator : ISourceGenerator
         {
             return;
         }
-        //this must be true for the generator to work anyway,
+
+        //the following must be true for the generator to work anyway,
         //  however, I'm only keeping it here should I ever need it
         //bool above9 = parseOptions.LanguageVersion >= LanguageVersion.CSharp9;
+        //-----
 
         if (context.SyntaxContextReceiver is not SyntaxContextReceiver syntaxContextReceiver)
             return;
@@ -51,12 +53,10 @@ public class ThunderboltSourceGenerator : ISourceGenerator
             .RegistrationTypes
             .SelectMany(type => ExplicitGeneratorHelper.TypesToRegister(
                                     ExplicitGeneratorHelper.GetDeclarationOverriddenRegisterMethod(type.declarations, registrarTypeSymbol),
-                                    registrarNonFactoryMethods))
-            .Select(descriptor => descriptor.ServiceSymbol);
+                                    registrarNonFactoryMethods));
         var allServices
             = attributeRegistration
-            .Select(descriptor => descriptor.ServiceSymbol)
-            .WhereIf(allExplicitRegistrations.Any(), attrReg => !allExplicitRegistrations.Any(explReg => attrReg.GetFullyQualifiedName() == explReg.GetFullyQualifiedName()))
+            .WhereIf(allExplicitRegistrations.Any(), attrReg => !allExplicitRegistrations.Any(explReg => attrReg.ServiceSymbol.GetFullyQualifiedName() == explReg.ServiceSymbol.GetFullyQualifiedName()))
             .Concat(allExplicitRegistrations);
 
         foreach (var (symbol, declarations) in syntaxContextReceiver.RegistrationTypes)
