@@ -57,18 +57,15 @@ internal sealed class ThunderboltScope : IThunderboltScope, IThunderboltResolver
         {
             if (disposing)
             {
-                // TODO: dispose managed state (managed objects)
-                // Should: dispose scoped instances
-            }
-
-            if (ThunderboltServiceRegistry.scopeClearanceActions.TryGetValue(id, out var actions))
-            {
-                if (actions is not null)
+                if (ThunderboltServiceRegistry.scopeClearanceActions.TryGetValue(id, out var actions))
                 {
-                    Parallel.ForEach(actions, action => action());
-                    actions.Clear();
+                    if (actions is not null)
+                    {
+                        Parallel.ForEach(actions, action => action());
+                        actions.Clear();
+                    }
+                    ThunderboltServiceRegistry.scopeClearanceActions.Remove(id);
                 }
-                ThunderboltServiceRegistry.scopeClearanceActions.Remove(id);
             }
             container = null;
             disposed = true;

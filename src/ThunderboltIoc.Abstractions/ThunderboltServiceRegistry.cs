@@ -76,18 +76,34 @@ internal static class ThunderboltServiceRegistry<T>
     internal static T GetSingleton(in IThunderboltResolver resolver)
         => singletonInstance ??= Factory(resolver, RegisteredImplSelector, RegisteredUserFactory);
 
-    internal static T SetInstance(int scopeId, in T instance)
+    internal static T SetInstance(int scopeId, T instance)
     {
         void removeAction() => scopesInstances.Remove(scopeId);
+        void disposeAction()
+        {
+            if (instance is IDisposable disposable)
+            {
+                disposable.Dispose();
+            }
+#if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER || NET5_0_OR_GREATER
+            else if (instance is IAsyncDisposable asyncDisposable)
+            {
+                asyncDisposable.DisposeAsync();
+            }
+#endif
+        }
+
         if (ThunderboltServiceRegistry.scopeClearanceActions.TryGetValue(scopeId, out var actions) && actions is not null)
         {
             actions.Add(removeAction);
+            actions.Add(disposeAction);
         }
         else
         {
-            ThunderboltServiceRegistry.scopeClearanceActions[scopeId] = new List<Action>(capacity: 1)
+            ThunderboltServiceRegistry.scopeClearanceActions[scopeId] = new List<Action>(capacity: 2)
             {
-                removeAction
+                removeAction,
+                disposeAction
             };
         }
         return scopesInstances[scopeId] = instance;
