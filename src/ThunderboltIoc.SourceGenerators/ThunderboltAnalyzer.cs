@@ -309,10 +309,8 @@ public class ThunderboltAnalyzer : DiagnosticAnalyzer
               DiagnosticSeverity.Error,
               isEnabledByDefault: true);
 
-        //TODO: Registration class must be a top-level class
         //TODO: prevent registering interface/abstract class without specifying implementation
-        //TOOD: prevent interface/abstract class implementation
-        //TODO: implSelector: if a registered service was specified, resolve it instead of creating it
+        //TOOD: prevent interface/abstract class implementation (unless it is a registered service)
     }
     #endregion
 }

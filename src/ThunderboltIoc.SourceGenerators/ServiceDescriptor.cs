@@ -32,7 +32,16 @@ internal readonly struct ServiceDescriptor : IEquatable<ServiceDescriptor>
         if (ImplSymbol is not null)
         {
             if (!ImplSymbol.IsAbstract)
-                yield return ImplSymbol;
+            { yield return ImplSymbol; }
+            else
+            {
+                string implName = ImplSymbol.GetFullyQualifiedName();
+                if (allServices.FirstOrDefault(service => service.ServiceSymbol.GetFullyQualifiedName() == implName) is ServiceDescriptor serviceDescriptor && serviceDescriptor.ServiceSymbol is INamedTypeSymbol serviceSymbol)
+                {
+                    foreach (INamedTypeSymbol implImpl in serviceDescriptor.GetPossibleImplementations(allServices))
+                        yield return implImpl;
+                }
+            }
             yield break;
         }
 

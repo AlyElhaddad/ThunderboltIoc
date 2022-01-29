@@ -6,7 +6,7 @@ namespace ThunderboltIoc.SourceGenerators;
 
 internal static class GeneratorHelper
 {
-    private static string GenerateTypeCtorCall(INamedTypeSymbol type, IEnumerable<INamedTypeSymbol> allServices)
+    private static string GenerateTypeCtorCall(INamedTypeSymbol type, IEnumerable<ServiceDescriptor> allServices)
     {
         //new T(resolver.Get<TDependency1>(), resolver.Get<TDependency2>())
 
@@ -34,13 +34,24 @@ internal static class GeneratorHelper
         return builder.ToString();
     }
 
-    private static string GenerateImplSelectorCtors(INamedTypeSymbol type, IEnumerable<INamedTypeSymbol> serviceImpls, IEnumerable<INamedTypeSymbol> allServices)
+    private static string GenerateImplSelector(INamedTypeSymbol type, IEnumerable<INamedTypeSymbol> serviceImpls, IEnumerable<ServiceDescriptor> allServices)
     {
         StringBuilder builder = new("Type implType = implSelector();");
         foreach (var serviceImp in serviceImpls)
         {
             builder.AppendLine();
-            builder.Append($@"if (typeof({serviceImp.GetFullyQualifiedName()}) == implType) return {GenerateTypeCtorCall(serviceImp, allServices)};");
+            string returned;
+            string serviceImpName = serviceImp.GetFullyQualifiedName();
+            if (allServices.FirstOrDefault(serviceDescriptor => serviceDescriptor.ServiceSymbol.GetFullyQualifiedName() == serviceImpName) is ServiceDescriptor serviceDescriptor && serviceDescriptor.ServiceSymbol is not null)
+            {
+                returned =
+$@"resolver.Get<{serviceDescriptor.ServiceSymbol.GetFullyQualifiedName()}>()";
+            }
+            else
+            {
+                returned = GenerateTypeCtorCall(serviceImp, allServices);
+            }
+            builder.Append($@"if (typeof({serviceImp.GetFullyQualifiedName()}) == implType) return {returned};");
         }
         builder.AppendLine();
 
@@ -48,7 +59,7 @@ internal static class GeneratorHelper
         return builder.ToString();
     }
 
-    private static string GenerateDictate(ServiceDescriptor serviceDescriptor, IEnumerable<INamedTypeSymbol> allServices)
+    private static string GenerateDictate(ServiceDescriptor serviceDescriptor, IEnumerable<ServiceDescriptor> allServices)
     {
         //this way may seem a bit more cleaner but it's a lot of hassle to write and not worthy of time for version 1
         //SyntaxFactory.ExpressionStatement(
@@ -72,13 +83,22 @@ $@"dictator.Dictate<{fullyQualifiedName}>((resolver, implSelector, userFactory) 
             return
 $@"dictator.Dictate<{fullyQualifiedName}>((resolver, implSelector, userFactory) =>
 {{
-{GenerateImplSelectorCtors(serviceDescriptor.ServiceSymbol, serviceDescriptor.ImplSelectorSymbols, allServices).AddIndentation(1)}
+{GenerateImplSelector(serviceDescriptor.ServiceSymbol, serviceDescriptor.ImplSelectorSymbols, allServices).AddIndentation(1)}
 }});";
+        }
+        if (serviceDescriptor.ImplSymbol is not null)
+        {
+            string implName = serviceDescriptor.ImplSymbol.GetFullyQualifiedName();
+            if (allServices.FirstOrDefault(service => service.ServiceSymbol.GetFullyQualifiedName() == implName) is ServiceDescriptor implServiceDescriptor && implServiceDescriptor.ServiceSymbol is not null)
+            {
+                return
+$@"dictator.Dictate<{fullyQualifiedName}>((resolver, implSelector, userFactory) => resolver.Get<{implServiceDescriptor.ServiceSymbol.GetFullyQualifiedName()}>());";
+            }
         }
         return
 $@"dictator.Dictate<{fullyQualifiedName}>((resolver, implSelector, userFactory) => {GenerateTypeCtorCall(serviceDescriptor.ImplSymbol ?? serviceDescriptor.ServiceSymbol, allServices)});";
     }
-    private static string GenerateDictates(IEnumerable<ServiceDescriptor> allTypes, IEnumerable<INamedTypeSymbol> allServices)
+    private static string GenerateDictates(IEnumerable<ServiceDescriptor> allTypes, IEnumerable<ServiceDescriptor> allServices)
     {
         return string.Join(Environment.NewLine, allTypes.Select(item => GenerateDictate(item, allServices)));
     }
@@ -90,7 +110,7 @@ $@"dictator.Dictate<{fullyQualifiedName}>((resolver, implSelector, userFactory) 
             $"reg.Add{(reg.Lifetime switch { 0 => Consts.Singleton, 1 => Consts.Scoped, 2 => Consts.Transient, _ => "" })}<{reg.ServiceSymbol.GetFullyQualifiedName()}{(reg.ImplSymbol is null ? "" : $", {reg.ImplSymbol.GetFullyQualifiedName()}")}>();"));
     }
 
-    internal static string GenerateDictateServiceFactories(IEnumerable<ServiceDescriptor> allTypes, IEnumerable<INamedTypeSymbol> allServices)
+    internal static string GenerateDictateServiceFactories(IEnumerable<ServiceDescriptor> allTypes, IEnumerable<ServiceDescriptor> allServices)
     {
         return !allTypes.Any() ? "" :
 $@"protected override void DictateServiceFactories({Consts.IIocDictatorTypeFullName} dictator)
