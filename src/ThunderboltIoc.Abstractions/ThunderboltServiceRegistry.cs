@@ -37,23 +37,76 @@ internal record HistoricalThunderboltServiceRegistry
     internal readonly ThunderboltServiceLifetime RegisteredLifetime;
     internal readonly Func<Type>? RegisteredImplSelector;
     internal readonly Func<IThunderboltResolver, object>? RegisteredUserFactory;
+    internal object? SingletonInstance;
+    internal readonly Dictionary<int, object> ScopesInstances;
 
     public HistoricalThunderboltServiceRegistry(
         Func<IThunderboltResolver, Func<Type>?, Func<IThunderboltResolver, object>?, object> dictatedFactory,
         ThunderboltServiceLifetime registeredLifetime,
         Func<Type>? registeredImplSelector,
-        Func<IThunderboltResolver, object>? registeredUserFactory)
+        Func<IThunderboltResolver, object>? registeredUserFactory,
+        object? singletonInstance,
+        Dictionary<int, object> scopesInstances)
     {
         DictatedFactory = dictatedFactory;
         RegisteredLifetime = registeredLifetime;
         RegisteredImplSelector = registeredImplSelector;
         RegisteredUserFactory = registeredUserFactory;
+        SingletonInstance = singletonInstance;
+        ScopesInstances = scopesInstances;
+
+        //Because scope instances have been copied from another dictionary
+        foreach (var scope in ScopesInstances)
+        {
+            if (ThunderboltServiceRegistry.scopeClearanceActions.TryGetValue(scope.Key, out var actions) && actions is not null)
+            {
+                actions.Add(() => ScopesInstances.Remove(scope.Key));
+            }
+        }
+    }
+
+    internal object GetSingleton(in IThunderboltResolver resolver)
+        => SingletonInstance ??= DictatedFactory(resolver, RegisteredImplSelector, RegisteredUserFactory);
+
+    internal object SetInstance(int scopeId, object instance)
+    {
+        void removeAction() => ScopesInstances.Remove(scopeId);
+#if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER || NET5_0_OR_GREATER
+        async
+#endif
+        void disposeAction()
+        {
+            if (instance is IDisposable disposable)
+            {
+                disposable.Dispose();
+            }
+#if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER || NET5_0_OR_GREATER
+            else if (instance is IAsyncDisposable asyncDisposable)
+            {
+                await asyncDisposable.DisposeAsync();
+            }
+#endif
+        }
+
+        if (ThunderboltServiceRegistry.scopeClearanceActions.TryGetValue(scopeId, out var actions) && actions is not null)
+        {
+            actions.Add(removeAction);
+            actions.Add(disposeAction);
+        }
+        else
+        {
+            ThunderboltServiceRegistry.scopeClearanceActions[scopeId] = new List<Action>(capacity: 2)
+            {
+                removeAction,
+                disposeAction
+            };
+        }
+        return ScopesInstances[scopeId] = instance;
     }
 }
 
 internal static class ThunderboltServiceRegistry
 {
-    internal static long globalRecordId;
     internal static readonly Dictionary<int, List<Action>> scopeClearanceActions = new();
     internal static readonly Dictionary<Type, GenericRegistryAccessor> generic = new(capacity: 4); // this is first accessed via the container's ctor, into which we later add two more registrations, making it a total of 3 (container, scope, resolver, serviceProvider)
 
@@ -90,25 +143,35 @@ internal static class ThunderboltServiceRegistry
                         //take a copy of the dictionary because resolving may modify the dictionary and we may end up with InvalidOperationException
                         .ToDictionary(kvp => kvp.Key, kvp => kvp.Value)
                         .Where(kvp => genArg.IsAssignableFrom(kvp.Key))
-                        .SelectMany(kvp => //resolver.GetService(kvp.Key)) //kvp.Value.factory(resolver))
+                        .SelectMany(kvp =>
                         {
-                            var services = kvp.Value.factory(resolver).AsEnumerable();
-                            var history = kvp.Value.registryHistory();
-                            if (history.Any())
+                            var currentValue = kvp.Value.lifetimeGetter() switch
                             {
-                                services = services.Concat(history.Select(record => record.DictatedFactory(resolver, record.RegisteredImplSelector, record.RegisteredUserFactory))).Reverse();
-                            }
-                            return services;
-                            //return kvp.Value.lifetimeGetter() switch
-                            //{
-                            //    ThunderboltServiceLifetime.Transient => kvp.Value.factory(resolver),
-                            //    ThunderboltServiceLifetime.Scoped when resolver is IThunderboltScope scope => new object(), //scoped instance accessor (implemented type)
-                            //    ThunderboltServiceLifetime.Singleton or ThunderboltServiceLifetime.Scoped => new object(), //singleton instance accessor (implemented type)
-                            //    _ => null
-                            //};
+                                ThunderboltServiceLifetime.Transient => kvp.Value.factory(resolver),
+                                ThunderboltServiceLifetime.Scoped when resolver is IThunderboltScope scope =>
+                                    kvp.Value.scopesInstances.TryGetValue(scope.Id, out object val)
+                                    ? val
+                                    : kvp.Value.instanceSetter(scope.Id, kvp.Value.factory(scope)),
+                                ThunderboltServiceLifetime.Singleton or ThunderboltServiceLifetime.Scoped => kvp.Value.singletonInstanceGetter(resolver),
+                                _ => null
+                            };
+                            var historicalValues
+                                = kvp.Value.registryHistory()
+                                .Select(record =>
+                                {
+                                    return record.RegisteredLifetime switch
+                                    {
+                                        ThunderboltServiceLifetime.Transient => record.DictatedFactory(resolver, record.RegisteredImplSelector, record.RegisteredUserFactory),
+                                        ThunderboltServiceLifetime.Scoped when resolver is IThunderboltScope scope =>
+                                            record.ScopesInstances.TryGetValue(scope.Id, out object val)
+                                            ? val
+                                            : record.SetInstance(scope.Id, record.DictatedFactory(scope, record.RegisteredImplSelector, record.RegisteredUserFactory)),
+                                        _ => null
+                                    };
+                                });
+                            return historicalValues.Concat(currentValue.AsEnumerable());
                         })
                         .Where(value => value is not null);
-                        //.ToArray();
                     return createEnumerableMethod.Invoke(null, new object[1] { enumerable });
                 });
                 return ThunderboltServiceLifetime.Transient; //open generic types are registered on the fly and therefore this shouldn't be singleton as there could always be new types
@@ -121,19 +184,12 @@ internal static class ThunderboltServiceRegistry
 internal static class ThunderboltServiceRegistry<T>
     where T : notnull
 {
-    //private static long recordId;
     private static readonly object syncLock = new object();
     internal static readonly Dictionary<int, T> scopesInstances = new();
     private static bool initialized;
     private static T? singletonInstance;
 
     static ThunderboltServiceRegistry()
-    {
-        //recordId = Interlocked.Increment(ref ThunderboltServiceRegistry.globalRecordId);
-        StaticInit();
-    }
-
-    private static void StaticInit()
     {
         ThunderboltServiceRegistry.generic[typeof(T)] = new GenericRegistryAccessor(
              () => RegisteredLifetime,
@@ -173,17 +229,11 @@ internal static class ThunderboltServiceRegistry<T>
 
     internal static void Dictate(in Func<IThunderboltResolver, Func<Type>?, Func<IThunderboltResolver, T>?, T> factory)
     {
-        if (typeof(T).GetFullyQualifiedName().Contains("global::Microsoft.Extensions.Options.IConfigureOptions<global::Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServerOptions>"))
-        { }
-        //if (typeof(T).GetFullyQualifiedName() == "global::Microsoft.AspNetCore.Hosting.Server.IServer")
-        //{ }
         ArchiveIfNeedBe();
         dictatedFactory = factory;
     }
     internal static void Dictate(in Func<IThunderboltResolver, Func<Type>?, Func<IThunderboltResolver, T>?, T> factory, ThunderboltServiceLifetime serviceLifetime, Func<Type>? implSelector, Func<IThunderboltResolver, T>? userFactory)
     {
-        if (typeof(T).GetFullyQualifiedName().Contains("global::Microsoft.Extensions.Options.IConfigureOptions<global::Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServerOptions>"))
-        { }
         ArchiveIfNeedBe();
         dictatedFactory = factory;
 
@@ -257,6 +307,7 @@ internal static class ThunderboltServiceRegistry<T>
         }
         return scopesInstances[scopeId] = instance;
     }
+
     #endregion
 
     #region Historical / IEnumerable<T> handling
@@ -269,26 +320,26 @@ internal static class ThunderboltServiceRegistry<T>
         if (dictatedFactory is null || !initialized)
             return;
 
-        //recordId = Interlocked.Increment(ref ThunderboltServiceRegistry.globalRecordId);
+        var localDictatedFactory = dictatedFactory!;
+        var localImplSelector = RegisteredImplSelector;
+        var localUserFactory = RegisteredUserFactory;
 
-        var copiedDictatedFactory = (Func<IThunderboltResolver, Func<Type>?, Func<IThunderboltResolver, T>?, T>)dictatedFactory!; //.Clone();
-        var copiedImplSelector = (Func<Type>?)RegisteredImplSelector; //?.Clone();
-        var copiedUserFactory = (Func<IThunderboltResolver, T>?)RegisteredUserFactory; //?.Clone();
-
-        ThunderboltServiceRegistryHistory.Add(
+        ThunderboltServiceRegistryHistory.Insert(0,
             new HistoricalThunderboltServiceRegistry(
-                (resolver, implSelector, userFactory) => copiedDictatedFactory(resolver, implSelector, userFactory is null ? default : (userFactoryResolver => (T)userFactory(userFactoryResolver))),
+                (resolver, implSelector, userFactory) => localDictatedFactory(resolver, implSelector, userFactory is null ? default : (userFactoryResolver => (T)userFactory(userFactoryResolver))),
                 registeredLifetime!.Value,
-                copiedImplSelector,
-                userFactoryResolver => copiedUserFactory!(userFactoryResolver)));
+                localImplSelector,
+                userFactoryResolver => localUserFactory!(userFactoryResolver),
+                singletonInstance,
+                scopesInstances.ToDictionary(kvp => kvp.Key, kvp => (object)kvp.Value)));
 
         dictatedFactory = null;
         initialized = false;
         registeredLifetime = null;
         RegisteredImplSelector = null;
         RegisteredUserFactory = null;
-
-        StaticInit();
+        singletonInstance = default;
+        scopesInstances.Clear();
     }
 
     #endregion
