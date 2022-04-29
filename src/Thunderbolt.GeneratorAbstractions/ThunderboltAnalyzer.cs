@@ -6,7 +6,7 @@ using Microsoft.CodeAnalysis.Operations;
 
 using System.Collections.Immutable;
 
-namespace ThunderboltIoc.SourceGenerators;
+namespace Thunderbolt.GeneratorAbstractions;
 
 [DiagnosticAnalyzer(LanguageNames.CSharp)]
 public class ThunderboltAnalyzer : DiagnosticAnalyzer
@@ -32,49 +32,8 @@ public class ThunderboltAnalyzer : DiagnosticAnalyzer
     {
         try
         {
-            INamedTypeSymbol? registrarTypeSymbol = ThunderboltSourceGenerator.GetRegistrarTypeSymbol(context.Compilation);
-            HashSet<IMethodSymbol>? registrarNonFactoryMethods = ThunderboltSourceGenerator.GetRegistrarNonFactoryMethods(registrarTypeSymbol);
-            if (registrarTypeSymbol is null || registrarNonFactoryMethods is null)
-            {
-                return;
-            }
-
             #region CyclicDependencies && NoSuitableConstructor
-            //Get attribute registrations
-            var attributeReg = AttributeGeneratorHelper.AllIncludedTypes(context.Compilation);
-
-            //Get explicit registrations
-            var explicitReg
-                = context
-                .Compilation
-                .SyntaxTrees
-                .SelectMany(tree =>
-                {
-#pragma warning disable RS1030 // Do not invoke Compilation.GetSemanticModel() method within a diagnostic analyzer
-                //it is advised against using GetSemanticModel within a diagnostic analyzer to prevent using it too often
-                // (e.g after completing a syntax node analysis) because that would result in it being too heavy.
-                // however, here we're using it only at the compilation time, times the syntax trees available, which should be okay.
-                SemanticModel semanticModel = context.Compilation.GetSemanticModel(tree);
-#pragma warning restore RS1030 // Do not invoke Compilation.GetSemanticModel() method within a diagnostic analyzer
-                return
-                    tree
-                    .GetRoot()
-                    .DescendantNodes()
-                    .OfType<InvocationExpressionSyntax>()
-                    .Select(invExp => SyntaxContextReceiver.GetRegisteredType(invExp, semanticModel).declarations)
-                    .Where(declarations => declarations is not null)
-                    .SelectMany(declarations =>
-                        ExplicitGeneratorHelper.TypesToRegister(
-                                ExplicitGeneratorHelper.GetDeclarationOverriddenRegisterMethod(declarations, registrarTypeSymbol),
-                                registrarNonFactoryMethods));
-                });
-
-            //Get filtered final registrations
-            var allRegs
-                = attributeReg
-                    .WhereIf(explicitReg.Any(), attrReg => !explicitReg.Any(explReg => attrReg.ServiceSymbol.GetFullyQualifiedName() == explReg.ServiceSymbol.GetFullyQualifiedName()))
-                    .Concat(explicitReg);
-
+            var allRegs = context.Compilation.GetAllServices();
             try
             {
                 if (DependencyHelper.HasCyclicDependencies(allRegs, out var deps))
@@ -114,8 +73,8 @@ public class ThunderboltAnalyzer : DiagnosticAnalyzer
                 .Compilation
                 .SyntaxTrees
                 .SelectMany(tree => tree.GetRoot().DescendantNodes().OfType<ClassDeclarationSyntax>())
-                .SelectMany(classDecl => classDecl.BaseList is null ? Enumerable.Empty<INamedTypeSymbol>() : classDecl.BaseList.Types.Select(t => context.SemanticModel.GetSpeculativeTypeInfo(t.Type.SpanStart, t.Type, SpeculativeBindingOption.BindAsTypeOrNamespace).Type).OfType<INamedTypeSymbol>())
-                .Any(symbol => symbol.GetFullyQualifiedName() == Consts.RegistrationTypeFullName))
+                .SelectMany(classDecl => classDecl.BaseList is null ? Enumerable.Empty<INamedTypeSymbol>() : classDecl.BaseList.Types.Select(t => context.SemanticModel.GetSpeculativeTypeInfo(t.Type.SpanStart, t.Type, SpeculativeBindingOption.BindAsTypeOrNamespace).Type))
+                .Any(symbol => symbol.GetFullyQualifiedName() == Consts.RegistrationTypeFullName || symbol?.HasParent(Consts.RegistrationTypeFullName) == true))
             {
                 context.ReportDiagnostic(Diagnostic.Create(Descriptors.MissingRegistration, attribute.Name.GetLocation()));
             }
@@ -140,7 +99,7 @@ public class ThunderboltAnalyzer : DiagnosticAnalyzer
             }
 #pragma warning restore CS8604 // Possible null reference argument.
 
-            string fullName = namedTypeSymbol.GetFullyQualifiedName();
+            string fullName = namedTypeSymbol.GetFullyQualifiedName()!;
             string name = fullName.RemovePrefix(Consts.global);
             Location location = classDeclaration.Identifier.GetLocation();
 
@@ -176,11 +135,11 @@ public class ThunderboltAnalyzer : DiagnosticAnalyzer
                         .OfType<InvocationExpressionSyntax>())
                     .Any(invExp => invExp.Expression is MemberAccessExpressionSyntax memberExp
                         && memberExp.Name is GenericNameSyntax genericName
-                        && genericName.Identifier.ValueText == Consts.AttachMethodName
+                        && genericName.Identifier.ValueText is Consts.AttachMethodName or Consts.UseMethodName //or .UseThunderbolt
                         && genericName.TypeArgumentList.Arguments.Count == 1
                         && context.SemanticModel.GetOperation(invExp) is IInvocationOperation invOp
-                        && invOp.TargetMethod.Name == Consts.AttachMethodName
-                        && invOp.TargetMethod.ContainingType.GetFullyQualifiedName() == Consts.ActivatorTypeFullName
+                        && invOp.TargetMethod.Name is Consts.AttachMethodName or Consts.UseMethodName
+                        && invOp.TargetMethod.ContainingType.GetFullyQualifiedName() is Consts.ActivatorTypeFullName or Consts.ExtensionsTypeFullName //or ThunderboltExtensions
                         && genericName.TypeArgumentList.Arguments.First() is TypeSyntax typeSyntax
                         && context.SemanticModel.GetSpeculativeTypeInfo(typeSyntax.SpanStart, typeSyntax, SpeculativeBindingOption.BindAsTypeOrNamespace).Type is INamedTypeSymbol regType
                         && regType.GetFullyQualifiedName() == fullName))
@@ -244,7 +203,7 @@ public class ThunderboltAnalyzer : DiagnosticAnalyzer
         //      0: Message,
         //      1: Warning,
         //      2: Error
-        //  2,3: 2-digit unique number regardless of the severity
+        //  2,3: 2-digit unique number independent of the severity
         internal static DiagnosticDescriptor AnalyzerException
             = new("TB000",
                 nameof(AnalyzerException),
@@ -256,7 +215,7 @@ public class ThunderboltAnalyzer : DiagnosticAnalyzer
         internal static DiagnosticDescriptor RegistrationNotAttached
             = new("TB001",
                 nameof(RegistrationNotAttached),
-                $"The class '{{0}}' implements '{Consts.registrationClass}' but a call to '{Consts.activatorClass}.{Consts.RegisterMethodName}<{{0}}>()' was not found in this project. Corresponding code-generation will therefore not happen.",
+                $"The class '{{0}}' implements '{Consts.registrationClass}' but a call to '{Consts.activatorClass}.{Consts.AttachMethodName}<{{0}}>()' or '{Consts.extensionsClass}.{Consts.UseMethodName}<{{0}}>()' was not found in this project. Corresponding code-generation will therefore not happen.",
                 "Design",
                 DiagnosticSeverity.Info,
                 isEnabledByDefault: true);

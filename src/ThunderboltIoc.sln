@@ -9,7 +9,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ThunderboltIoc.Abstractions
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ThunderboltIoc.SourceGenerators", "ThunderboltIoc.SourceGenerators\ThunderboltIoc.SourceGenerators.csproj", "{3E14538F-2E83-4450-8CBC-BAFACD770BDE}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{07825FE5-1ADD-4E5F-AB96-9F82780F8CF1}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "_SolutionItems", "_SolutionItems", "{07825FE5-1ADD-4E5F-AB96-9F82780F8CF1}"
 	ProjectSection(SolutionItems) = preProject
 		..\.gitattributes = ..\.gitattributes
 		..\.gitignore = ..\.gitignore
@@ -17,7 +17,26 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		..\README.md = ..\README.md
 	EndProjectSection
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "benchmarks", "benchmarks\benchmarks.csproj", "{C0842B94-83BA-4C36-ACE6-748843E49789}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "extensions", "extensions", "{F90D6481-88D8-43BB-922C-71443D0D8845}"
+	ProjectSection(SolutionItems) = preProject
+		extensions\Directory.Build.Props = extensions\Directory.Build.Props
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "benchmarks", "benchmarks", "{84DACF2D-262A-4B60-9134-8047FD116BEC}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "benchmarks", "benchmarks\benchmarks.csproj", "{D7FF9D14-F671-4572-9FD9-3AE93EEFEB32}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Thunderbolt.Extensions.DependencyInjection", "extensions\Thunderbolt.Extensions.DependencyInjection\Thunderbolt.Extensions.DependencyInjection.csproj", "{A0E7910B-E570-4CE9-A443-CFC64B70000F}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Thunderbolt.Extensions.Hosting", "extensions\Thunderbolt.Extensions.Hosting\Thunderbolt.Extensions.Hosting.csproj", "{5A66FA76-45AC-4B95-A1B3-AA2F7BFCA34D}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Thunderbolt.Extensions.Abstractions", "extensions\Thunderbolt.Extensions.Abstractions\Thunderbolt.Extensions.Abstractions.csproj", "{ECDB1A78-522E-4442-86BF-E8D35335D715}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Thunderbolt.Extensions.AspNetCore", "extensions\Thunderbolt.Extensions.AspNetCore\Thunderbolt.Extensions.AspNetCore.csproj", "{EE810604-2CA4-4731-98C2-0A0C245601E6}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Thunderbolt.Extensions.SourceGenerators", "extensions\Thunderbolt.Extensions.SourceGenerators\Thunderbolt.Extensions.SourceGenerators.csproj", "{AA4CDEB3-215B-4D7C-A1C7-B093BE3C8198}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Thunderbolt.GeneratorAbstractions", "Thunderbolt.GeneratorAbstractions\Thunderbolt.GeneratorAbstractions.csproj", "{168924FA-5B03-4F81-AE19-32CDA8342AD9}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -37,13 +56,45 @@ Global
 		{3E14538F-2E83-4450-8CBC-BAFACD770BDE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3E14538F-2E83-4450-8CBC-BAFACD770BDE}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{3E14538F-2E83-4450-8CBC-BAFACD770BDE}.Release|Any CPU.Build.0 = Release|Any CPU
-		{C0842B94-83BA-4C36-ACE6-748843E49789}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{C0842B94-83BA-4C36-ACE6-748843E49789}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{C0842B94-83BA-4C36-ACE6-748843E49789}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{C0842B94-83BA-4C36-ACE6-748843E49789}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D7FF9D14-F671-4572-9FD9-3AE93EEFEB32}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D7FF9D14-F671-4572-9FD9-3AE93EEFEB32}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D7FF9D14-F671-4572-9FD9-3AE93EEFEB32}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D7FF9D14-F671-4572-9FD9-3AE93EEFEB32}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A0E7910B-E570-4CE9-A443-CFC64B70000F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A0E7910B-E570-4CE9-A443-CFC64B70000F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A0E7910B-E570-4CE9-A443-CFC64B70000F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A0E7910B-E570-4CE9-A443-CFC64B70000F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5A66FA76-45AC-4B95-A1B3-AA2F7BFCA34D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5A66FA76-45AC-4B95-A1B3-AA2F7BFCA34D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5A66FA76-45AC-4B95-A1B3-AA2F7BFCA34D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5A66FA76-45AC-4B95-A1B3-AA2F7BFCA34D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{ECDB1A78-522E-4442-86BF-E8D35335D715}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{ECDB1A78-522E-4442-86BF-E8D35335D715}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{ECDB1A78-522E-4442-86BF-E8D35335D715}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{ECDB1A78-522E-4442-86BF-E8D35335D715}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EE810604-2CA4-4731-98C2-0A0C245601E6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EE810604-2CA4-4731-98C2-0A0C245601E6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EE810604-2CA4-4731-98C2-0A0C245601E6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EE810604-2CA4-4731-98C2-0A0C245601E6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AA4CDEB3-215B-4D7C-A1C7-B093BE3C8198}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AA4CDEB3-215B-4D7C-A1C7-B093BE3C8198}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AA4CDEB3-215B-4D7C-A1C7-B093BE3C8198}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AA4CDEB3-215B-4D7C-A1C7-B093BE3C8198}.Release|Any CPU.Build.0 = Release|Any CPU
+		{168924FA-5B03-4F81-AE19-32CDA8342AD9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{168924FA-5B03-4F81-AE19-32CDA8342AD9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{168924FA-5B03-4F81-AE19-32CDA8342AD9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{168924FA-5B03-4F81-AE19-32CDA8342AD9}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{D7FF9D14-F671-4572-9FD9-3AE93EEFEB32} = {84DACF2D-262A-4B60-9134-8047FD116BEC}
+		{A0E7910B-E570-4CE9-A443-CFC64B70000F} = {F90D6481-88D8-43BB-922C-71443D0D8845}
+		{5A66FA76-45AC-4B95-A1B3-AA2F7BFCA34D} = {F90D6481-88D8-43BB-922C-71443D0D8845}
+		{ECDB1A78-522E-4442-86BF-E8D35335D715} = {F90D6481-88D8-43BB-922C-71443D0D8845}
+		{EE810604-2CA4-4731-98C2-0A0C245601E6} = {F90D6481-88D8-43BB-922C-71443D0D8845}
+		{AA4CDEB3-215B-4D7C-A1C7-B093BE3C8198} = {F90D6481-88D8-43BB-922C-71443D0D8845}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {F8400F3C-F7D7-45FD-85A7-7F585DE36652}

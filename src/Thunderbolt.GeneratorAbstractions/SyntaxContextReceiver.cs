@@ -2,7 +2,7 @@
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Operations;
 
-namespace ThunderboltIoc.SourceGenerators;
+namespace Thunderbolt.GeneratorAbstractions;
 
 public class SyntaxContextReceiver : ISyntaxContextReceiver
 {
@@ -29,11 +29,11 @@ public class SyntaxContextReceiver : ISyntaxContextReceiver
     {
         if (invExp.Expression is MemberAccessExpressionSyntax memberExp
             && memberExp.Name is GenericNameSyntax genericName
-            && genericName.Identifier.ValueText == Consts.AttachMethodName
+            && genericName.Identifier.ValueText is Consts.AttachMethodName or Consts.UseMethodName //or .UseThunderbolt
             && genericName.TypeArgumentList.Arguments.Count == 1
             && semanticModel.GetOperation(invExp) is IInvocationOperation invOp
-            && invOp.TargetMethod.Name == Consts.AttachMethodName //use the semantic model to make sure it's our method, not some other method called attach
-            && invOp.TargetMethod.ContainingType.GetFullyQualifiedName() == Consts.ActivatorTypeFullName)
+            && invOp.TargetMethod.Name is Consts.AttachMethodName or Consts.UseMethodName //use the semantic model to make sure it's our method, not some other method called attach
+            && invOp.TargetMethod.ContainingType.GetFullyQualifiedName() is Consts.ActivatorTypeFullName or Consts.ExtensionsTypeFullName) //or ThunderboltExtensions
         {
             //get our type, and then make sure it is declared in the current assembly and that it's a partial class
             //the fact that it must be a ThunderboltRegistration is already implied by the generic param constraint of the attach method

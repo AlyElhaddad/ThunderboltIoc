@@ -1,0 +1,10 @@
+<Project>
+  <PropertyGroup>
+    <PackageOutputPath>..\..\..\output_packages</PackageOutputPath>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="..\..\..\assets\thunderbolt_128.png" Pack="true" Visible="false" PackagePath="images\thunderbolt_128.png"/>
+    <None Include="..\..\..\README.md" Pack="true" Visible="false" PackagePath="docs\README.md"/>
+  </ItemGroup>
+</Project>

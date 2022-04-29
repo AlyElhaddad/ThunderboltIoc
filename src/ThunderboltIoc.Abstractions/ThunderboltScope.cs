@@ -1,4 +1,6 @@
-﻿namespace ThunderboltIoc;
+﻿using Thunderbolt.GeneratorAbstractions;
+
+namespace ThunderboltIoc;
 
 internal sealed class ThunderboltScope : IThunderboltScope, IThunderboltResolver, IServiceProvider, IDisposable
 {
@@ -15,9 +17,12 @@ internal sealed class ThunderboltScope : IThunderboltScope, IThunderboltResolver
 
     public int Id => id;
 
-#pragma warning disable CS8604 // Possible null reference argument.
-    public T Get<T>() where T : notnull
+    public T? Get<T>() where T : notnull
     {
+        if (typeof(T).ToString().StartsWith("Swashbuckle"))
+        {
+
+        }
         if (disposed)
             throw new ObjectDisposedException(GetType().FullName);
 
@@ -28,26 +33,39 @@ internal sealed class ThunderboltScope : IThunderboltScope, IThunderboltResolver
                 => ThunderboltServiceRegistry<T>.scopesInstances.TryGetValue(id, out T? val)
                 ? val
                 : ThunderboltServiceRegistry<T>.SetInstance(id, ThunderboltServiceRegistry<T>.Factory(this, ThunderboltServiceRegistry<T>.RegisteredImplSelector, ThunderboltServiceRegistry<T>.RegisteredUserFactory)),
-            ThunderboltServiceLifetime.Singleton => ThunderboltServiceRegistry<T>.GetSingleton(container),
-            _ => throw new InvalidOperationException("Unknown ThunderboltServiceLifetime."),
+            ThunderboltServiceLifetime.Singleton => ThunderboltServiceRegistry<T>.GetSingleton(container!),
+            _ => typeof(T).IsEnumerable() ? (T)typeof(T).EmptyEnumerable() : default!
         };
     }
-    public object GetService(Type serviceType)
+    public object? GetService(Type serviceType)
     {
+        if (serviceType.ToString().StartsWith("Swashbuckle"))
+        {
+
+        }
         if (disposed)
             throw new ObjectDisposedException(GetType().FullName);
-        var genAcc = ThunderboltServiceRegistry.generic[serviceType];
-        return genAcc.lifetimeGetter() switch
+
+        ThunderboltServiceLifetime? lifetime;
+        if (ThunderboltServiceRegistry.generic.TryGetValue(serviceType, out var genAcc))
+        {
+            lifetime = genAcc.lifetimeGetter();
+        }
+        else
+        {
+            lifetime = ThunderboltServiceRegistry.InitializeAndGetServiceLifetime(serviceType);
+            ThunderboltServiceRegistry.generic.TryGetValue(serviceType, out genAcc);
+        }
+        return lifetime switch
         {
             ThunderboltServiceLifetime.Transient => genAcc.factory(this),
             ThunderboltServiceLifetime.Scoped => genAcc.scopesInstances.TryGetValue(id, out object? val)
                 ? val
                 : genAcc.instanceSetter(id, genAcc.factory(this)),
-            ThunderboltServiceLifetime.Singleton => genAcc.singletonInstanceGetter(container),
-            _ => throw new InvalidOperationException("Unknown ThunderboltServiceLifetime.")
+            ThunderboltServiceLifetime.Singleton => genAcc.singletonInstanceGetter(container!),
+            _ => serviceType.IsEnumerable() ? serviceType.EmptyEnumerable() : default
         };
     }
-#pragma warning restore CS8604 // Possible null reference argument.
 
     #region IDisposable pattern
     private bool disposed;

@@ -1,7 +1,7 @@
 ﻿using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
-namespace ThunderboltIoc.SourceGenerators;
+namespace Thunderbolt.GeneratorAbstractions;
 
 internal static class RoslynSyntactixExtensions
 {
@@ -10,6 +10,5 @@ internal static class RoslynSyntactixExtensions
         return
             classDeclaration.Members.OfType<MethodDeclarationSyntax>().Where(m => m.Identifier.Text == methodName && (modifiers?.Any() != true || (m.Modifiers.Count == modifiers.Length && modifiers.All(modifier => m.Modifiers.Any(mod => mod.Text == modifier)))));
     }
-
 }
 

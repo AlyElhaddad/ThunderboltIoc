@@ -6,13 +6,22 @@
     <Nullable>enable</Nullable>
     <LangVersion>10</LangVersion>
     <Description>The consumable APIs for ThunderboltIoc.</Description>
-    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
     <RootNamespace>ThunderboltIoc</RootNamespace>
+    <ProduceReferenceAssemblies>false</ProduceReferenceAssemblies>
   </PropertyGroup>
 
   <ItemGroup>
     <Using Remove="System.IO" />
     <Using Remove="System.Linq" />
     <Using Remove="System.Net.Http" />
+    <Compile Include="..\Thunderbolt.GeneratorAbstractions\TypeExtensions.cs">
+      <Link>GeneratorAbstractions\%(Filename)%(Extension)</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Compile>
+    <Compile Include="..\Thunderbolt.GeneratorAbstractions\EnumerableExtensions.cs">
+      <Link>GeneratorAbstractions\%(Filename)%(Extension)</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Compile>
   </ItemGroup>
 </Project>

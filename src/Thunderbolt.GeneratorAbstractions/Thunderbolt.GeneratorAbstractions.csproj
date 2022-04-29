@@ -1,0 +1,56 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <LangVersion>10</LangVersion>
+    <IsPackable>true</IsPackable>
+    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+    <IncludeBuildOutput>true</IncludeBuildOutput>
+    <ProduceReferenceAssemblies>false</ProduceReferenceAssemblies>
+    <Description>Abstractions used by different Thunderbolt source generators.</Description>
+    <RootNamespace>Thunderbolt.GeneratorAbstractions</RootNamespace>
+    <AssemblyName>Thunderbolt.GeneratorAbstractions</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="3.3.3">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.0.1" />
+
+    <PackageReference Include="Microsoft.CodeAnalysis.Common" Version="4.0.1" GeneratePathProperty="true" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="3.3.2" GeneratePathProperty="true" PrivateAssets="all" />
+    <PackageReference Include="System.Collections.Immutable" Version="5.0.0" GeneratePathProperty="true" PrivateAssets="all" />
+    <PackageReference Include="System.Memory" Version="4.5.4" GeneratePathProperty="true" PrivateAssets="all" />
+    <PackageReference Include="System.Buffers" Version="4.5.1" GeneratePathProperty="true" PrivateAssets="all" />
+    <PackageReference Include="System.Numerics.Vectors" Version="4.4.0" GeneratePathProperty="true" PrivateAssets="all" />
+    <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="5.0.0" GeneratePathProperty="true" PrivateAssets="all" />
+    <PackageReference Include="System.Reflection.Metadata" Version="5.0.0" GeneratePathProperty="true" PrivateAssets="all" />
+    <PackageReference Include="System.Text.Encoding.CodePages" Version="4.5.1" GeneratePathProperty="true" PrivateAssets="all" />
+    <PackageReference Include="System.Threading.Tasks.Extensions" Version="4.5.4" GeneratePathProperty="true" PrivateAssets="all" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <GetTargetPathDependsOn>$(GetTargetPathDependsOn);GetDependencyTargetPaths</GetTargetPathDependsOn>
+  </PropertyGroup>
+
+  <Target Name="GetDependencyTargetPaths">
+    <ItemGroup>
+      <TargetPathWithTargetPlatformMoniker Include="$(PkgMicrosoft_CodeAnalysis_CSharp)\lib\netstandard2.0\*.dll" IncludeRuntimeDependency="false" />
+      <TargetPathWithTargetPlatformMoniker Include="$(PkgMicrosoft_CodeAnalysis_Common)\lib\netstandard2.0\*.dll" IncludeRuntimeDependency="false" />
+      <TargetPathWithTargetPlatformMoniker Include="$(PkgMicrosoft_CodeAnalysis_Analyzers)\lib\netstandard2.0\*.dll" IncludeRuntimeDependency="false" />
+      <TargetPathWithTargetPlatformMoniker Include="$(PkgSystem_Collections_Immutable)\lib\netstandard2.0\*.dll" IncludeRuntimeDependency="false" />
+      <TargetPathWithTargetPlatformMoniker Include="$(PkgSystem_Memory)\lib\netstandard2.0\*.dll" IncludeRuntimeDependency="false" />
+      <TargetPathWithTargetPlatformMoniker Include="$(PkgSystem_Buffers)\lib\netstandard2.0\*.dll" IncludeRuntimeDependency="false" />
+      <TargetPathWithTargetPlatformMoniker Include="$(PkgSystem_Numerics_Vectors)\lib\netstandard2.0\*.dll" IncludeRuntimeDependency="false" />
+      <TargetPathWithTargetPlatformMoniker Include="$(PkgSystem_Runtime_CompilerServices_Unsafe)\lib\netstandard2.0\*.dll" IncludeRuntimeDependency="false" />
+      <TargetPathWithTargetPlatformMoniker Include="$(PkgSystem_Reflection_Metadata)\lib\netstandard2.0\*.dll" IncludeRuntimeDependency="false" />
+      <TargetPathWithTargetPlatformMoniker Include="$(PkgSystem_Text_Encoding_CodePages)\lib\netstandard2.0\*.dll" IncludeRuntimeDependency="false" />
+      <TargetPathWithTargetPlatformMoniker Include="$(PkgSystem_Threading_Tasks_Extensions)\lib\netstandard2.0\*.dll" IncludeRuntimeDependency="false" />
+    </ItemGroup>
+  </Target>
+  
+</Project>

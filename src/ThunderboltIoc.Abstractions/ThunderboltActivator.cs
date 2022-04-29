@@ -14,7 +14,7 @@ public static class ThunderboltActivator
     /// <summary>
     /// A short-hand for <see cref="Container.Get{T}()"/>.
     /// </summary>
-    public static T Get<T>() where T : notnull => Container.Get<T>();
+    public static T? Get<T>() where T : notnull => Container.Get<T>();
 
     /// <summary>
     /// A short-hand for <see cref="Container.CreateScope()"/>.
@@ -22,9 +22,17 @@ public static class ThunderboltActivator
     public static IThunderboltScope CreateScope() => Container.CreateScope();
 
     /// <summary>
-    /// Attached the specified <see cref="ThunderboltRegistration"/> to the singleton container.
+    /// Attaches the specified <see cref="ThunderboltRegistration"/> to the singleton container.
     /// </summary>
     public static void Attach<TRegistration>()
         where TRegistration : notnull, ThunderboltRegistration, new()
         => (container ??= new()).Attach<TRegistration>();
+
+    /// <summary>
+    /// Attaches the specified <see cref="ThunderboltRegistration"/> to the singleton container.
+    /// </summary>
+    internal static void Attach<TContainer, TRegistration>()
+        where TContainer : notnull, ThunderboltContainer, new()
+        where TRegistration : notnull, ThunderboltRegistration, new()
+        => (container ??= new TContainer()).Attach<TRegistration>();
 }

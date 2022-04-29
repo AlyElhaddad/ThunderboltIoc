@@ -2,7 +2,7 @@
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Operations;
 
-namespace ThunderboltIoc.SourceGenerators;
+namespace Thunderbolt.GeneratorAbstractions;
 
 internal static class ExplicitGeneratorHelper
 {
@@ -20,7 +20,7 @@ internal static class ExplicitGeneratorHelper
         //  I have therefore decided to make the last comparison by types' full names as strings instead.
     }
 
-    internal static IEnumerable<ServiceDescriptor> TypesToRegister(IEnumerable<(MethodDeclarationSyntax methodDecl, SemanticModel semanticModel)> overriddenRegisterDeclarations, HashSet<IMethodSymbol> registrarNonFactoryMethods)
+    internal static IEnumerable<ServiceDescriptor> TypesToRegister(Compilation compilation, IEnumerable<(MethodDeclarationSyntax methodDecl, SemanticModel semanticModel)> overriddenRegisterDeclarations, HashSet<IMethodSymbol> registrarNonFactoryMethods)
     {
         foreach (var (registerDecl, semanticModel) in overriddenRegisterDeclarations)
         {
@@ -48,11 +48,11 @@ internal static class ExplicitGeneratorHelper
                         {
                             yield return new ServiceDescriptor(
                                 lifetime: null,
-                                serviceSymbol: serviceType,
-                                implSymbol: null,
-                                implSelectorSymbols: null,
+                                serviceType: TypeDescriptor.FromTypeSymbol(serviceType, compilation),
+                                implType: null,
+                                implSelectorTypes: null,
                                 hasFactory: false,
-                                registeredByAttribute: false);
+                                shouldUseFullDictate: false);
                         }
                     }
                     else if (genericName.TypeArgumentList.Arguments.Count == 2)
@@ -63,11 +63,11 @@ internal static class ExplicitGeneratorHelper
                         {
                             yield return new ServiceDescriptor(
                                 lifetime: null,
-                                serviceSymbol: serviceType,
-                                implSymbol: implType,
-                                implSelectorSymbols: null,
+                                serviceType: TypeDescriptor.FromTypeSymbol(serviceType, compilation),
+                                implType: TypeDescriptor.FromTypeSymbol(implType, compilation),
+                                implSelectorTypes: null,
                                 hasFactory: false,
-                                registeredByAttribute: false);
+                                shouldUseFullDictate: false);
                         }
                     }
                 }
@@ -81,11 +81,11 @@ internal static class ExplicitGeneratorHelper
                         //factory
                         yield return new ServiceDescriptor(
                             lifetime: null,
-                            serviceSymbol: serviceType,
-                            implSymbol: null,
-                            implSelectorSymbols: null,
+                            serviceType: TypeDescriptor.FromTypeSymbol(serviceType, compilation),
+                            implType: null,
+                            implSelectorTypes: null,
                             hasFactory: true,
-                            registeredByAttribute: false);
+                            shouldUseFullDictate: false);
                         continue;
                     }
                     //implSelector signature
@@ -110,14 +110,15 @@ internal static class ExplicitGeneratorHelper
                     }
                     yield return new ServiceDescriptor(
                         lifetime: null,
-                        serviceSymbol: serviceType,
-                        implSymbol: null,
-                        implSelectorSymbols:
+                            serviceType: TypeDescriptor.FromTypeSymbol(serviceType, compilation),
+                        implType: null,
+                        implSelectorTypes:
                             typeofStatements
                                 .Select(typeOfExpr => semanticModel.GetSpeculativeTypeInfo(typeOfExpr.Type.SpanStart, typeOfExpr.Type, SpeculativeBindingOption.BindAsTypeOrNamespace).Type)
-                                .OfType<INamedTypeSymbol>(),
+                                .OfType<INamedTypeSymbol>()
+                                .Select(serviceType => TypeDescriptor.FromTypeSymbol(serviceType, compilation)),
                         hasFactory: false,
-                        registeredByAttribute: false);
+                        shouldUseFullDictate: false);
                 }
             }
         }

@@ -2,7 +2,7 @@
 
 using System.Text.RegularExpressions;
 
-namespace ThunderboltIoc.SourceGenerators;
+namespace Thunderbolt.GeneratorAbstractions;
 
 internal static class AttributeGeneratorHelper
 {
@@ -69,7 +69,7 @@ internal static class AttributeGeneratorHelper
             }
         }
 
-        return inclusions.WhereIf(exclusions.Any(), incl => !exclusions.Any(excl => incl.type.GetFullyQualifiedName() == excl.GetFullyQualifiedName())).Select(incl => new ServiceDescriptor(incl.serviceLifetime, incl.type, incl.impl, null, false, true));
+        return inclusions.WhereIf(exclusions.Any(), incl => !exclusions.Any(excl => incl.type.GetFullyQualifiedName() == excl.GetFullyQualifiedName())).Select(incl => new ServiceDescriptor(incl.serviceLifetime, TypeDescriptor.FromTypeSymbol(incl.type, compilation), incl.impl is null ? null : TypeDescriptor.FromTypeSymbol(incl.impl, compilation), null, false, true));
     }
 
     private static IEnumerable<ServiceDescriptor> IncludedRegexTypes(Compilation compilation)
@@ -90,14 +90,14 @@ internal static class AttributeGeneratorHelper
                     pattern = $@"({Consts.global})?{pattern}";
                     IEnumerable<(INamedTypeSymbol type, string typeFullName, INamedTypeSymbol? typeImpl, int serviceLifetime)> typesToInclude;
                     var types
-                        = allTypes.Select(type => (type, typeFullName: type.GetFullyQualifiedName(), serviceLifetime))
+                        = allTypes.Select(type => (type, typeFullName: type.GetFullyQualifiedName()!, serviceLifetime))
                         .Where(item => Regex.IsMatch(item.typeFullName, pattern));
                     if (data.ConstructorArguments.Length == 4)
                     {
                         if ((string?)data.ConstructorArguments[2].Value is not string implPattern || (string?)data.ConstructorArguments[3].Value is not string joinKey)
                             continue;
                         var implTypes
-                            = allTypes.Select(type => (type, typeFullName: type.GetFullyQualifiedName(), serviceLifetime))
+                            = allTypes.Select(type => (type, typeFullName: type.GetFullyQualifiedName()!, serviceLifetime))
                             .Where(item => Regex.IsMatch(item.typeFullName, implPattern));
                         typesToInclude
                             = types.Join(implTypes, item => Regex.Match(item.typeFullName, joinKey)?.Value, item => Regex.Match(item.typeFullName, joinKey)?.Value, (outer, inner) => (outer.type, outer.typeFullName, inner.type ?? null, outer.serviceLifetime));
@@ -113,7 +113,7 @@ internal static class AttributeGeneratorHelper
                     if (pattern is null) continue;
                     pattern = $@"({Consts.global})?{pattern}";
                     exclusions.AddRange(
-                        allTypes.Select(type => (type, typeFullName: type.GetFullyQualifiedName()))
+                        allTypes.Select(type => (type, typeFullName: type.GetFullyQualifiedName()!))
                         .Where(item => Regex.IsMatch(item.typeFullName, pattern)));
                     break;
                 default:
@@ -123,7 +123,7 @@ internal static class AttributeGeneratorHelper
 
         return inclusions
             .WhereIf(exclusions.Any(), incl => !exclusions.Any(excl => excl.typeFullName == incl.typeFullName))
-            .Select(incl => new ServiceDescriptor(incl.servcieLifetime, incl.type, incl.impl, null, false, true));
+            .Select(incl => new ServiceDescriptor(incl.servcieLifetime, TypeDescriptor.FromTypeSymbol(incl.type, compilation), incl.impl is null ? null : TypeDescriptor.FromTypeSymbol(incl.impl, compilation), null, false, true));
     }
 
     internal static IEnumerable<ServiceDescriptor> AllIncludedTypes(Compilation compilation)

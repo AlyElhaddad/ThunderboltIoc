@@ -44,15 +44,27 @@ public interface IThunderboltRegistrar
     /// <summary>
     /// Registers a transient service using a factory.
     /// </summary>
-    void AddTransientFactory<TService>(in Func<TService> factory) where TService : notnull;
+    void AddTransientFactory<TService>(Func<TService> factory) where TService : notnull;
     /// <summary>
     /// Registers a scoped service using a factory.
     /// </summary>
-    void AddScopedFactory<TService>(in Func<TService> factory) where TService : notnull;
+    void AddScopedFactory<TService>(Func<TService> factory) where TService : notnull;
     /// <summary>
     /// Registers a singleton service using a factory.
     /// </summary>
-    void AddSingletonFactory<TService>(in Func<TService> factory) where TService : notnull;
+    void AddSingletonFactory<TService>(Func<TService> factory) where TService : notnull;
+    /// <summary>
+    /// Registers a transient service using a factory.
+    /// </summary>
+    void AddTransientFactory<TService>(Func<IThunderboltResolver, TService> factory) where TService : notnull;
+    /// <summary>
+    /// Registers a scoped service using a factory.
+    /// </summary>
+    void AddScopedFactory<TService>(Func<IThunderboltResolver, TService> factory) where TService : notnull;
+    /// <summary>
+    /// Registers a singleton service using a factory.
+    /// </summary>
+    void AddSingletonFactory<TService>(Func<IThunderboltResolver, TService> factory) where TService : notnull;
 
 
 
@@ -61,13 +73,13 @@ public interface IThunderboltRegistrar
     /// <summary>
     /// Registers a transient service by its type with its implementation type determined by a type factory.
     /// </summary>
-    void AddTransient<TService>(in Func<Type> implSelector) where TService : notnull;
+    void AddTransient<TService>(Func<Type> implSelector) where TService : notnull;
     /// <summary>
     /// Registers a scoped service by its type with its implementation type determined by a type factory.
     /// </summary>
-    void AddScoped<TService>(in Func<Type> implSelector) where TService : notnull;
+    void AddScoped<TService>(Func<Type> implSelector) where TService : notnull;
     /// <summary>
     /// Registers a singleton service by its type with its implementation type determined by a type factory.
     /// </summary>
-    void AddSingleton<TService>(in Func<Type> implSelector) where TService : notnull;
+    void AddSingleton<TService>(Func<Type> implSelector) where TService : notnull;
 }

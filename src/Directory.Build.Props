@@ -1,6 +1,6 @@
 <Project>
   <PropertyGroup>
-    <Version>1.2.3</Version>
+    <Version>2.0.0-pre1</Version>
     <Authors>Aly Elhaddad</Authors>
     <Owners>Aly Elhaddad</Owners>
     <PackageProjectUrl>https://github.com/AlyElhaddad/ThunderboltIoc</PackageProjectUrl>
@@ -10,7 +10,7 @@
     <PackageTags>Thunderbolt;ThunderboltIoc;roslyn;analyzers;code-generation;ioc;dependency-injection;di;inversion-of-control;aot</PackageTags>
     <RepositoryType>git</RepositoryType>
     <PackageIcon>images\thunderbolt_128.png</PackageIcon>
-    <PackageReadmeFile>docs\README.md</PackageReadmeFile>
+    <!--<PackageReadmeFile>docs\README.md</PackageReadmeFile>-->
     <PackageOutputPath>..\..\output_packages</PackageOutputPath>
   </PropertyGroup>
 

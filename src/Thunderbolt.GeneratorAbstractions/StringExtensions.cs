@@ -1,4 +1,6 @@
-﻿namespace ThunderboltIoc.SourceGenerators;
+﻿using System.Text.RegularExpressions;
+
+namespace Thunderbolt.GeneratorAbstractions;
 
 public static class StringExtensions
 {
@@ -25,5 +27,9 @@ public static class StringExtensions
             return str;
         string indentation = new('\t', indentationLength);
         return $"{indentation}{string.Join($"{Environment.NewLine}{indentation}", str.Split(new[] { "\r\n", "\n" }, StringSplitOptions.None))}";
+    }
+    public static string VarNameForm(this string str)
+    {
+        return Regex.Replace(str.Replace("@", "_tp_"), @"[^A-z0-9_]{1}", "_");
     }
 }

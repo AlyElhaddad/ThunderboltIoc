@@ -1,27 +1,27 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-  
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <LangVersion>10</LangVersion>
     <IsPackable>true</IsPackable>
-    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
     <NoPackageAnalysis>true</NoPackageAnalysis>
     <IsRoslynComponent>true</IsRoslynComponent>
     <SuppressDependenciesWhenPacking>true</SuppressDependenciesWhenPacking>
     <Description>The source generator project used to analyze registrations and generate the necessary services' factories for ThunderboltIoc.</Description>
     <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+    <RootNamespace>ThunderboltIoc.SourceGenerators</RootNamespace>
   </PropertyGroup>
   
   <ItemGroup>
     <Compile Remove="bin\**" />
     <EmbeddedResource Remove="bin\**" />
     <None Remove="bin\**" />
-  </ItemGroup>
-  
-  <ItemGroup>
-    <None Remove="bin\Debug\netstandard2.0\\ThunderboltIoc.SourceGenerators.dll" />
+	<Compile Include="..\Thunderbolt.GeneratorAbstractions\*.cs">
+		<Link>GeneratorAbstractions\%(Filename)%(Extension)</Link>
+		<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	</Compile>
   </ItemGroup>
 
   <ItemGroup>

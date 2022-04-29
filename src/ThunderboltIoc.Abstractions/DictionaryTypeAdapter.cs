@@ -20,16 +20,12 @@ internal readonly struct DictionaryTypeAdapter<TKey, TSourceValue, TTargetValue>
         return source.ContainsKey(key);
     }
 
-#pragma warning disable IDE0079 // Remove unnecessary suppression
-#pragma warning disable CS8601 // Possible null reference assignment.
     public bool TryGetValue(TKey key, out TTargetValue value)
     {
         bool succeeded = source.TryGetValue(key, out var srcValue);
         value = srcValue;
         return succeeded;
     }
-#pragma warning restore CS8601 // Possible null reference assignment.
-#pragma warning restore IDE0079 // Remove unnecessary suppression
 
     public TTargetValue this[TKey key] => source[key];
 

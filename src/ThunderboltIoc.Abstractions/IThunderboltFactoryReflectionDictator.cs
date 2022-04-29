@@ -5,24 +5,21 @@ namespace ThunderboltIoc;
 /// <summary>
 /// This is for source generator purposes. Do not make use of that.
 /// </summary>
-/// <remarks>
-/// What an evil factory should that be though :D
-/// </remarks>
 [EditorBrowsable(EditorBrowsableState.Never)]
 [Browsable(false)]
-public interface IThunderboltFactoryDictator
+public interface IThunderboltFactoryReflectionDictator : IThunderboltFactoryDictator
 {
     /// <summary>
     /// This is for source generator purposes. Do not make use of that.
     /// </summary>
     [EditorBrowsable(EditorBrowsableState.Never)]
     [Browsable(false)]
-    void Dictate<T>(Func<IThunderboltResolver, Func<Type>?, Func<IThunderboltResolver, T>?, T> factory) where T : notnull;
+    void Dictate(in Type serviceType, in Func<IThunderboltResolver, Func<Type>?, Func<IThunderboltResolver, object>?, object> factory);
 
     /// <summary>
     /// This is for source generator purposes. Do not make use of that.
     /// </summary>
     [EditorBrowsable(EditorBrowsableState.Never)]
     [Browsable(false)]
-    void Dictate<T>(Func<IThunderboltResolver, Func<Type>?, Func<IThunderboltResolver, T>?, T> factory, ThunderboltServiceLifetime serviceLifetime, Func<Type>? implSelector, Func<IThunderboltResolver, T>? userFactory) where T : notnull;
+    void Dictate(in Type serviceType, in Func<IThunderboltResolver, Func<Type>?, Func<IThunderboltResolver, object>?, object> factory, ThunderboltServiceLifetime serviceLifetime, Func<Type>? implSelector, Func<IThunderboltResolver, object>? userFactory);
 }

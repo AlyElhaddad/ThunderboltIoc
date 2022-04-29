@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>netcoreapp3.1;net5.0;net6.0</TargetFrameworks>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <LangVersion>10</LangVersion>
+    <Description>Thunderbolt extensions for ASP.NET Core.</Description>
+    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+    <RootNamespace>Thunderbolt.Extensions.DependencyInjection</RootNamespace>
+  </PropertyGroup>
+
+</Project>
