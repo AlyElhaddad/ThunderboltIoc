@@ -69,7 +69,12 @@ public class ThunderboltSourceGenerator : ISourceGenerator
             string requiredFieldsStr = GeneratorHelper.GenerateRequiredFields(effectiveServices, requiredFields);
 
             string source =
-$@"namespace {symbol.ContainingNamespace.GetFullNamespaceName().RemovePrefix(Consts.global)}
+$@"#pragma warning disable
+#nullable enable
+
+using global::System.Linq;
+
+namespace {symbol.ContainingNamespace.GetFullNamespaceName().RemovePrefix(Consts.global)}
 {{
     [global::System.CodeDom.Compiler.GeneratedCodeAttribute(""ThunderboltIoc"", ""{FileVersionInfo.GetVersionInfo(GetType().Assembly.Location).ProductVersion}"")]
     partial class {symbol.Name}
@@ -80,7 +85,9 @@ $@"namespace {symbol.ContainingNamespace.GetFullNamespaceName().RemovePrefix(Con
 {(string.IsNullOrWhiteSpace(dictateTypeFactories) ? "" : dictateTypeFactories.AddIndentation(3))}
         }}
     }}
-}}";
+}}
+#nullable restore
+#pragma warning restore";
             //{(string.IsNullOrWhiteSpace(staticRegistrer) ? "" : staticRegistrer.AddIndentation(3))}
 
             context.AddSource($"{symbol.Name}.g.cs", source);

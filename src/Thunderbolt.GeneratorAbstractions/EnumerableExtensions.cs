@@ -2,8 +2,8 @@
 
 namespace Thunderbolt.GeneratorAbstractions;
 
-public delegate bool SelectWhereDelegate<in T, TResult>(T item, out TResult result);
-public static class EnumerableExtensions
+internal delegate bool SelectWhereDelegate<in T, TResult>(T item, out TResult result);
+internal static class EnumerableExtensions
 {
     public static IEnumerable<TResult> SelectWhere<T, TResult>(this IEnumerable<T> source, SelectWhereDelegate<T, TResult> predicateSelector)
     {

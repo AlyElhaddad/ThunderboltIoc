@@ -2,7 +2,7 @@
 
 namespace Thunderbolt.GeneratorAbstractions;
 
-public static class StringExtensions
+internal static class StringExtensions
 {
     public static bool IsNull(this string str) => str is null;
 

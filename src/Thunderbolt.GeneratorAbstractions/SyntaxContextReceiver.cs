@@ -4,7 +4,7 @@ using Microsoft.CodeAnalysis.Operations;
 
 namespace Thunderbolt.GeneratorAbstractions;
 
-public class SyntaxContextReceiver : ISyntaxContextReceiver
+internal class SyntaxContextReceiver : ISyntaxContextReceiver
 {
     internal SyntaxContextReceiver()
     {

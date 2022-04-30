@@ -31,22 +31,10 @@ internal sealed class ThunderboltMsContainer : ThunderboltContainer, ISupportReq
         public int Id => scope.Id;
 
         public T? Get<T>() where T : notnull
-        {
-            if (typeof(T).ToString().StartsWith("Swashbuckle"))
-            {
+            => scope.Get<T>();
 
-            }
-            return scope.Get<T>();
-        }
-
-        public object GetService(Type serviceType)
-        {
-            if (serviceType.ToString().StartsWith("Swashbuckle"))
-            {
-
-            }
-            return scope.GetService(serviceType);
-        }
+        public object? GetService(Type serviceType)
+            => scope.GetService(serviceType);
 
         public void Dispose()
         {
@@ -54,37 +42,14 @@ internal sealed class ThunderboltMsContainer : ThunderboltContainer, ISupportReq
         }
 
         public object GetRequiredService(Type serviceType)
-        {
-            try
-            {
-                return scope.GetService(serviceType) ?? throw new InvalidOperationException($"No service for type '{serviceType}' has been registered.");
-            }
-            catch (InvalidOperationException ex)
-            {
-                throw;
-            }
-        }
+            => scope.GetService(serviceType) ?? throw new InvalidOperationException($"No service for type '{serviceType}' has been registered.");
     }
 
     public ThunderboltMsContainer()
     {
         ThunderboltServiceRegistry<IServiceScopeFactory>.Dictate((_, _, userFactory) => userFactory!(null!), ThunderboltServiceLifetime.Singleton, null, _ => new ServiceScopeFactory(this));
-        //ThunderboltServiceRegistry<IServiceScopeFactory>.Register(ThunderboltServiceLifetime.Singleton, _ => new ServiceScopeFactory(this));
     }
 
     public object GetRequiredService(Type serviceType)
-    {
-        if (serviceType.ToString().StartsWith("Swashbuckle"))
-        {
-
-        }
-        try
-        {
-            return GetService(serviceType) ?? throw new InvalidOperationException($"No service for type '{serviceType}' has been registered.");
-        }
-        catch (InvalidOperationException ex)
-        {
-            throw;
-        }
-    }
+        => GetService(serviceType) ?? throw new InvalidOperationException($"No service for type '{serviceType}' has been registered.");
 }

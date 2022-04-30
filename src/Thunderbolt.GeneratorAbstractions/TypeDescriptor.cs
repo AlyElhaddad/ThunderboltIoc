@@ -80,7 +80,9 @@ internal class TypeDescriptor : IEquatable<TypeDescriptor>
         IEnumerable<TypeDescriptor> genericArgs = maxDepth <= 0 ? Enumerable.Empty<TypeDescriptor>() : typeSymbol.AllGenericArgs().Select(genericArg => FromTypeSymbol(genericArg, compilation));
         bool isExternalNonPublicType = typeSymbol.IsExternal(compilation) && typeSymbol.IsNonPublic();
         IEnumerable<IEnumerable<TypeDescriptor>> ctorsParamsTypes = maxDepth <= 0 ? Enumerable.Empty<IEnumerable<TypeDescriptor>>() : typeSymbol is not INamedTypeSymbol ? Enumerable.Empty<IEnumerable<TypeDescriptor>>() : namedTypeSymbol!.InstanceConstructors.Where(ctor => ctor.DeclaredAccessibility == Accessibility.Public).Select(ctor => ctor.Parameters.Select(ctorParam => FromTypeSymbol(ctorParam.Type, compilation)));
+#pragma warning disable RS1024 // Compare symbols correctly
         IDictionary<string, TypeDescriptor> publicSetProperties = maxDepth <= 0 ? new Dictionary<string, TypeDescriptor>() : typeSymbol.PublicSetProperties().ToDictionary(prop => prop.Name, prop => FromTypeSymbol((prop.Type as INamedTypeSymbol)!, compilation));
+#pragma warning restore RS1024 // Compare symbols correctly
         IEnumerable<TypeDescriptor> ancestors = maxDepth <= 0 ? Enumerable.Empty<TypeDescriptor>() : typeSymbol.Ancestors().Select(parent => FromTypeSymbol(parent, compilation));
         IEnumerable<TypeDescriptor> nestingTypes = maxDepth <= 0 ? Enumerable.Empty<TypeDescriptor>() : typeSymbol.NestingTypes().Select(nestingType => FromTypeSymbol(nestingType, compilation));
 

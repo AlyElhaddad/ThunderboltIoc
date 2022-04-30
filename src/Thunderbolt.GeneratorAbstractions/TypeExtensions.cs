@@ -9,12 +9,12 @@ internal static class TypeExtensions
     private static Type? enumerableTypeDef;
     private static Type EnumerableTypeDef => enumerableTypeDef ??= typeof(IEnumerable<>);
     private static MethodInfo? enumerableEmptyMethodDef;
-    private static MethodInfo EnumerableEmptyMethodDef => enumerableEmptyMethodDef ??= typeof(Enumerable).GetMethod(nameof(Enumerable.Empty), BindingFlags.Static | BindingFlags.Public);
+    private static MethodInfo EnumerableEmptyMethodDef => enumerableEmptyMethodDef ??= typeof(Enumerable).GetMethod(nameof(Enumerable.Empty), BindingFlags.Static | BindingFlags.Public)!;
     internal static bool IsEnumerable(this Type type)
         => type.IsGenericType ? (type.IsGenericTypeDefinition ? type : type.GetGenericTypeDefinition()) == EnumerableTypeDef : false;
     internal static object EmptyEnumerable(this Type type)
     {
-        return EnumerableEmptyMethodDef.MakeGenericMethod(type.GetGenericArguments()[0]).Invoke(null, null);
+        return EnumerableEmptyMethodDef.MakeGenericMethod(type.GetGenericArguments()[0]).Invoke(null, null)!;
     }
     internal static string GetFullyQualifiedName(this Type type)
         => type.GetFullyQualifiedName(false);
@@ -26,7 +26,7 @@ internal static class TypeExtensions
             typeName = typeName.Substring(0, genericCharIndex);
         if (type.IsGenericParameter)
         {
-            return $"{type.DeclaringType.GetFullyQualifiedName(true)}@{typeName}";
+            return $"{type.DeclaringType!.GetFullyQualifiedName(true)}@{typeName}";
         }
         var originalType = type;
         StringBuilder builder = new(typeName);

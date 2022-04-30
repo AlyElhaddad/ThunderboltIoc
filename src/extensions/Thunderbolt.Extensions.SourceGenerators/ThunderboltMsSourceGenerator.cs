@@ -15,12 +15,12 @@ public class ThunderboltMsSourceGenerator : ISourceGenerator
     public void Initialize(GeneratorInitializationContext context)
     {
         //this is for the purpose of debugging the source generator itself and can be ignored
-#if DEBUG
-        if (!System.Diagnostics.Debugger.IsAttached)
-        {
-            //System.Diagnostics.Debugger.Launch();
-        }
-#endif
+//#if DEBUG
+//        if (!System.Diagnostics.Debugger.IsAttached)
+//        {
+//            System.Diagnostics.Debugger.Launch();
+//        }
+//#endif
     }
 
     public void Execute(GeneratorExecutionContext context)
@@ -75,13 +75,14 @@ public class ThunderboltMsSourceGenerator : ISourceGenerator
         Dictionary<TypeDescriptor, RequiredField> requiredFields = new();
         var effectiveServices = allServices.Exclude(specialServices);
 
-        //string staticRegistrer = GeneratorHelper.GenerateStaticRegister(effectiveServices.Where(s => s.ServiceType.TendsToExternalNonPublic || s.ImplType?.TendsToExternalNonPublic == true).Select(service => (service, default(INamedTypeSymbol?))), requiredFields);
-        //string staticRegistrer = GeneratorHelper.GenerateStaticRegister(effectiveServices.Where(s => s.ServiceType.IsNonClosedGenericType || s.ServiceType.TendsToExternalNonPublic || s.ImplType?.IsNonClosedGenericType == true || s.ImplType?.TendsToExternalNonPublic == true).Select(service => (service, default(INamedTypeSymbol?))), requiredFields);
+        //string staticRegistrer = GeneratorHelper.GenerateStaticRegister(effectiveServices ...);
         string dictateTypeFactories = GeneratorHelper.GenerateDictateTypeFactories(effectiveServices, allServices, requiredFields);
         string requiredFieldsStr = GeneratorHelper.GenerateRequiredFields(allServices, requiredFields);
 
         string source =
-$@"#nullable enable
+$@"#pragma warning disable
+#nullable enable
+
 using global::System.Linq;
 
 namespace {registrationSymbol.ContainingNamespace.GetFullNamespaceName().RemovePrefix(Consts.global)}
@@ -96,7 +97,8 @@ namespace {registrationSymbol.ContainingNamespace.GetFullNamespaceName().RemoveP
         }}
     }}
 }}
-#nullable restore";
+#nullable restore
+#pragma warning restore";
         //{(string.IsNullOrWhiteSpace(staticRegistrer) ? "" : staticRegistrer.AddIndentation(3))}
 
         context.AddSource($"{registrationSymbol.Name}.g.cs", source);

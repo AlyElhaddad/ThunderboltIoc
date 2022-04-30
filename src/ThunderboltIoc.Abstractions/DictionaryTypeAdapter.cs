@@ -23,7 +23,7 @@ internal readonly struct DictionaryTypeAdapter<TKey, TSourceValue, TTargetValue>
     public bool TryGetValue(TKey key, out TTargetValue value)
     {
         bool succeeded = source.TryGetValue(key, out var srcValue);
-        value = srcValue;
+        value = srcValue!;
         return succeeded;
     }
 

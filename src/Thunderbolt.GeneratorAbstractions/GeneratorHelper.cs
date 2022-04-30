@@ -147,7 +147,7 @@ internal static class GeneratorHelper
             else if (ctorParamTypes.Count() is int paramsCount && paramsCount > 0)
             {
                 builder
-                 .Append("new object[")
+                 .Append("new object?[")
                  .Append(paramsCount)
                  .Append("] { ");
             }
@@ -330,7 +330,7 @@ internal static class GeneratorHelper
     {
         if (serviceDescriptor.HasFactory)
         {
-            return "userFactory(resolver)";
+            return "userFactory!(resolver)";
         }
         if (serviceDescriptor.ImplSelectorTypes is not null)
         {
@@ -365,7 +365,7 @@ $@"
                 .Append(impl.Name.VarNameForm())
                 .Append("= type_")
                 .Append(impl.Name.VarNameForm())
-                .Append(".MakeGenericType(typeArgs);")
+                .Append(".MakeGenericType(typeArgs)!;")
                 .AppendLine();
 
             var ctorParamTypes = DependencyHelper.FindBestCtors(impl, allServices).First().ToArray();
@@ -392,7 +392,7 @@ $@"
                 .Append(impl.Name.VarNameForm())
                 .Append(" = constructedType_")
                 .Append(impl.Name.VarNameForm())
-                .Append(".GetConstructor(ctorTypes);")
+                .Append(".GetConstructor(ctorTypes)!;")
                 .AppendLine();
 
             var injectedProperties = DependencyHelper.GetInjectedProperties(impl, allServices);
@@ -407,7 +407,7 @@ $@"
                     .Append(impl.Name.VarNameForm())
                     .Append(".GetProperty(\"")
                     .Append(propName)
-                    .Append("\");")
+                    .Append("\")!;")
                     .AppendLine();
             }
 
@@ -453,81 +453,81 @@ $@"
         return string.Join(Environment.NewLine, allTypes.Select(item => GenerateDictate(item, allServices, requiredFields)));
     }
 
-    private static string GenerateStaticRegistrations(IEnumerable<ServiceDescriptor> services, IDictionary<TypeDescriptor, RequiredField> requiredFields)
-    {
-        StringBuilder builder = new();
-        bool isFirst = true;
-        foreach (var service in services)
-        {
-            if (isFirst)
-                isFirst = false;
-            else
-                builder.AppendLine();
-            builder
-                .Append("reg.Add")
-                .Append(service.Lifetime switch { 0 => Consts.Singleton, 1 => Consts.Scoped, 2 => Consts.Transient, _ => "" });
-            if (service.HasFactory)
-            {
-                builder.Append("Factory");
-            }
-            if (service.ServiceType.TendsToExternalNonPublic || service.ServiceType.IsNonClosedGenericType || service.ImplType?.TendsToExternalNonPublic == true || service.ImplType?.IsNonClosedGenericType == true)
-            {
-                AddTypeField(requiredFields, service.ServiceType);
-                if (service.ImplType is not null)
-                    AddTypeField(requiredFields, service.ImplType);
-                builder
-                    .Append("Reflection(type_")
-                    .Append(service.ServiceType.Name.VarNameForm());
-                if (service.HasFactory)
-                {
-                    builder
-                        .Append(", ");
-                }
-            }
-            else
-            {
-                builder
-                    .Append('<')
-                    .Append(service.ServiceType.Name);
-                if (service.ImplType is not null)
-                {
-                    builder
-                        .Append(", ")
-                        .Append(service.ImplType?.Name);
-                }
-                builder.Append(">(");
-            }
-            if (service.HasFactory)
-            {
-                AddFactoryField(requiredFields, service);
-                builder
-                    .Append("resolver => ");
-                if (!service.ServiceType.TendsToExternalNonPublic && !service.ServiceType.IsNonClosedGenericType)
-                {
-                    builder
-                        .Append('(')
-                        .Append(service.ServiceType.Name)
-                        .Append(')');
-                }
-                builder
-                     .Append("typeFactory_")
-                    .Append(service.ServiceType.Name.VarNameForm())
-                    .Append($"(resolver)");
-            }
-            builder.Append(");");
-        }
-        return builder.ToString();
-    }
+    //private static string GenerateStaticRegistrations(IEnumerable<ServiceDescriptor> services, IDictionary<TypeDescriptor, RequiredField> requiredFields)
+    //{
+    //    StringBuilder builder = new();
+    //    bool isFirst = true;
+    //    foreach (var service in services)
+    //    {
+    //        if (isFirst)
+    //            isFirst = false;
+    //        else
+    //            builder.AppendLine();
+    //        builder
+    //            .Append("reg.Add")
+    //            .Append(service.Lifetime switch { 0 => Consts.Singleton, 1 => Consts.Scoped, 2 => Consts.Transient, _ => "" });
+    //        if (service.HasFactory)
+    //        {
+    //            builder.Append("Factory");
+    //        }
+    //        if (service.ServiceType.TendsToExternalNonPublic || service.ServiceType.IsNonClosedGenericType || service.ImplType?.TendsToExternalNonPublic == true || service.ImplType?.IsNonClosedGenericType == true)
+    //        {
+    //            AddTypeField(requiredFields, service.ServiceType);
+    //            if (service.ImplType is not null)
+    //                AddTypeField(requiredFields, service.ImplType);
+    //            builder
+    //                .Append("Reflection(type_")
+    //                .Append(service.ServiceType.Name.VarNameForm());
+    //            if (service.HasFactory)
+    //            {
+    //                builder
+    //                    .Append(", ");
+    //            }
+    //        }
+    //        else
+    //        {
+    //            builder
+    //                .Append('<')
+    //                .Append(service.ServiceType.Name);
+    //            if (service.ImplType is not null)
+    //            {
+    //                builder
+    //                    .Append(", ")
+    //                    .Append(service.ImplType?.Name);
+    //            }
+    //            builder.Append(">(");
+    //        }
+    //        if (service.HasFactory)
+    //        {
+    //            AddFactoryField(requiredFields, service);
+    //            builder
+    //                .Append("resolver => ");
+    //            if (!service.ServiceType.TendsToExternalNonPublic && !service.ServiceType.IsNonClosedGenericType)
+    //            {
+    //                builder
+    //                    .Append('(')
+    //                    .Append(service.ServiceType.Name)
+    //                    .Append(')');
+    //            }
+    //            builder
+    //                 .Append("typeFactory_")
+    //                .Append(service.ServiceType.Name.VarNameForm())
+    //                .Append($"(resolver)");
+    //        }
+    //        builder.Append(");");
+    //    }
+    //    return builder.ToString();
+    //}
 
     internal static string GenerateDictateTypeFactories(IEnumerable<ServiceDescriptor> allTypes, IEnumerable<ServiceDescriptor> allServices, IDictionary<TypeDescriptor, RequiredField> requiredFields)
     {
         return !allTypes.Any() ? "" : GenerateDictates(allTypes, allServices, requiredFields);
     }
 
-    internal static string GenerateStaticRegister(IEnumerable<(ServiceDescriptor service, INamedTypeSymbol? symbol)> allTypes, IDictionary<TypeDescriptor, RequiredField> requiredFields)
-    {
-        return !allTypes.Any(item => item.symbol is null) ? "" : GenerateStaticRegistrations(allTypes.Where(item => item.symbol is null && !item.service.ServiceType.IsNonClosedGenericType).Select(item => item.service), requiredFields);
-    }
+    //internal static string GenerateStaticRegister(IEnumerable<(ServiceDescriptor service, INamedTypeSymbol? symbol)> allTypes, IDictionary<TypeDescriptor, RequiredField> requiredFields)
+    //{
+    //    return !allTypes.Any(item => item.symbol is null) ? "" : GenerateStaticRegistrations(allTypes.Where(item => item.symbol is null && !item.service.ServiceType.IsNonClosedGenericType).Select(item => item.service), requiredFields);
+    //}
 
     internal static string GenerateRequiredFields(IEnumerable<ServiceDescriptor> allServices, IDictionary<TypeDescriptor, RequiredField> requiredFields)
     {
@@ -569,7 +569,7 @@ $@"static global::System.Type constructType(in global::System.Type type, in glob
                 args[i] = constructType(typeArg, typesMap);
             }}
         }}
-        return (type.IsGenericTypeDefinition ? type : type.GetGenericTypeDefinition()).MakeGenericType(args);
+        return (type.IsGenericTypeDefinition ? type : type.GetGenericTypeDefinition()).MakeGenericType(args)!;
     }}
     return type;
 }}");
@@ -600,7 +600,7 @@ $@"static global::System.Type constructType(in global::System.Type type, in glob
                         .Append(type.Name.VarNameForm())
                         .Append(" = privateType_")
                         .Append(type.Name.VarNameForm())
-                        .Append(".factory;");
+                        .Append(".factory!;");
                 }
                 if (requiredField.Type || requiredField.Ctor || requiredField.Props.Count > 0)
                 {
@@ -646,12 +646,12 @@ $@"static global::System.Type constructType(in global::System.Type type, in glob
                           .Append(paramsCount)
                           .Append("] { ")
                           .Append(string.Join(", ", ctorParamTypes.Select(paramType => paramType.TendsToExternalNonPublic || paramType.IsNonClosedGenericType ? $"type_{paramType.Name.VarNameForm()}" : $"typeof({paramType.Name})")))
-                          .Append(" });");
+                          .Append(" })!;");
                     }
                     else
                     {
                         builder
-                            .Append("global::System.Array.Empty<global::System.Type>());");
+                            .Append("global::System.Array.Empty<global::System.Type>())!;");
                     }
                     builder
                       .AppendLine();
@@ -670,7 +670,7 @@ $@"static global::System.Type constructType(in global::System.Type type, in glob
                         .Append(type.Name.VarNameForm())
                         .Append(".GetProperty(\"")
                         .Append(propName)
-                        .Append("\");")
+                        .Append("\")!;")
                         .AppendLine();
                 }
                 #endregion}

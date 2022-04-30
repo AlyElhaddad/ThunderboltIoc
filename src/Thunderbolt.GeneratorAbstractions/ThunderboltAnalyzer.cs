@@ -9,7 +9,7 @@ using System.Collections.Immutable;
 namespace Thunderbolt.GeneratorAbstractions;
 
 [DiagnosticAnalyzer(LanguageNames.CSharp)]
-public class ThunderboltAnalyzer : DiagnosticAnalyzer
+internal class ThunderboltAnalyzer : DiagnosticAnalyzer
 {
     private static readonly IEnumerable<string> thunderboltAttributeNames = new string[]
     {

@@ -9,16 +9,9 @@ internal class ThunderboltContainer : IThunderboltContainer, IThunderboltResolve
     internal ThunderboltContainer()
     {
         ThunderboltServiceRegistry<IThunderboltContainer>.Dictate((resolver, _, userFactory) => userFactory!(null!), ThunderboltServiceLifetime.Singleton, null, _ => this);
-        //ThunderboltServiceRegistry<IThunderboltContainer>.Register(ThunderboltServiceLifetime.Singleton, _ => this);
-
         ThunderboltServiceRegistry<IThunderboltScope>.Dictate((resolver, _, userFactory) => userFactory!(null!), ThunderboltServiceLifetime.Transient, null, _ => CreateScope());
-        //ThunderboltServiceRegistry<IThunderboltScope>.Register(ThunderboltServiceLifetime.Transient, _ => CreateScope());
-
         ThunderboltServiceRegistry<IThunderboltResolver>.Dictate((resolver, _, _) => resolver, ThunderboltServiceLifetime.Transient, null, null);
-        //ThunderboltServiceRegistry<IThunderboltResolver>.Register(ThunderboltServiceLifetime.Transient);
-
         ThunderboltServiceRegistry<IServiceProvider>.Dictate((resolver, _, _) => resolver, ThunderboltServiceLifetime.Transient, null, null);
-        //ThunderboltServiceRegistry<IServiceProvider>.Register(ThunderboltServiceLifetime.Transient);
     }
 
     internal void Attach<TRegistration>()
@@ -108,7 +101,7 @@ internal class ThunderboltContainer : IThunderboltContainer, IThunderboltResolve
         EnsureReflectionContextInitialized();
         var dictate = dictateDefinition!.MakeGenericMethod(serviceType);
         var createDictateFunc = createDictateFuncDefinition!.MakeGenericMethod(serviceType);
-        dictate.Invoke(this, new object[] { createDictateFunc.Invoke(null, new object[] { factory }) });
+        dictate.Invoke(this, new object?[] { createDictateFunc.Invoke(null, new object?[] { factory }) });
     }
     public void Dictate(in Type serviceType, in Func<IThunderboltResolver, Func<Type>?, Func<IThunderboltResolver, object>?, object> factory, ThunderboltServiceLifetime serviceLifetime, Func<Type>? implSelector, Func<IThunderboltResolver, object>? userFactory)
     {
@@ -116,7 +109,7 @@ internal class ThunderboltContainer : IThunderboltContainer, IThunderboltResolve
         var dictate = fullDictateDefinition!.MakeGenericMethod(serviceType);
         var createDictateFunc = createDictateFuncDefinition!.MakeGenericMethod(serviceType).Invoke(null, new object[] { factory });
         var createUserFactoryFunc = userFactory is null ? null : createUserFactoryFuncDefinition!.MakeGenericMethod(serviceType).Invoke(null, new object[] { userFactory! });
-        dictate.Invoke(this, new object[] { createDictateFunc, serviceLifetime, implSelector!, createUserFactoryFunc! });
+        dictate.Invoke(this, new object?[] { createDictateFunc, serviceLifetime, implSelector!, createUserFactoryFunc! });
     }
 
     #region Microsoft.Extensions.DependencyInjection support
@@ -196,7 +189,7 @@ internal class ThunderboltContainer : IThunderboltContainer, IThunderboltResolve
         EnsureReflectionContextInitialized();
         var dictate = dictateDefinition!.MakeGenericMethod(serviceType);
         var createDictateFunc = createDictateFuncDefinition!.MakeGenericMethod(serviceType);
-        dictate.Invoke(ThunderboltActivator.Container, new object[] { createDictateFunc.Invoke(null, new object[] { factory }) });
+        dictate.Invoke(ThunderboltActivator.Container, new object?[] { createDictateFunc.Invoke(null, new object?[] { factory }) });
     }
 
     #region IThunderboltReflectionRegistrar
@@ -221,21 +214,21 @@ internal class ThunderboltContainer : IThunderboltContainer, IThunderboltResolve
         EnsureReflectionContextInitialized();
         var addTransientFactory = addTransientFactoryDefinition!.MakeGenericMethod(serviceType);
         var createUserFactoryFunc = createUserFactoryFuncDefinition!.MakeGenericMethod(serviceType);
-        addTransientFactory.Invoke(this, new object[] { createUserFactoryFunc.Invoke(null, new object[] { factory }) });
+        addTransientFactory.Invoke(this, new object?[] { createUserFactoryFunc.Invoke(null, new object?[] { factory }) });
     }
     public void AddScopedFactoryReflection(in Type serviceType, in Func<IThunderboltResolver, object> factory)
     {
         EnsureReflectionContextInitialized();
         var addScopedFactory = addScopedFactoryDefinition!.MakeGenericMethod(serviceType);
         var createUserFactoryFunc = createUserFactoryFuncDefinition!.MakeGenericMethod(serviceType);
-        addScopedFactory.Invoke(this, new object[] { createUserFactoryFunc.Invoke(null, new object[] { factory }) });
+        addScopedFactory.Invoke(this, new object?[] { createUserFactoryFunc.Invoke(null, new object?[] { factory }) });
     }
     public void AddSingletonFactoryReflection(in Type serviceType, in Func<IThunderboltResolver, object> factory)
     {
         EnsureReflectionContextInitialized();
         var addSingletonFactory = addSingletonFactoryDefinition!.MakeGenericMethod(serviceType);
         var createUserFactoryFunc = createUserFactoryFuncDefinition!.MakeGenericMethod(serviceType);
-        addSingletonFactory.Invoke(this, new object[] { createUserFactoryFunc.Invoke(null, new object[] { factory }) });
+        addSingletonFactory.Invoke(this, new object?[] { createUserFactoryFunc.Invoke(null, new object?[] { factory }) });
     }
     #endregion
     #endregion

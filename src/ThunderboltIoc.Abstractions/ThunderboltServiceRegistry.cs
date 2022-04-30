@@ -117,7 +117,7 @@ internal static class ThunderboltServiceRegistry
         => enumerable.Cast<T>();
     private static MethodInfo? createEnumerableMethodDef;
     private static MethodInfo CreateEnumerableMethodDef
-        => createEnumerableMethodDef ??= typeof(ThunderboltServiceRegistry).GetMethod(nameof(CreateEnumerable), BindingFlags.Static | BindingFlags.NonPublic).GetGenericMethodDefinition();
+        => createEnumerableMethodDef ??= typeof(ThunderboltServiceRegistry).GetMethod(nameof(CreateEnumerable), BindingFlags.Static | BindingFlags.NonPublic)!.GetGenericMethodDefinition();
 
     internal static ThunderboltServiceLifetime? InitializeAndGetServiceLifetime(Type t)
     {
@@ -149,7 +149,7 @@ internal static class ThunderboltServiceRegistry
                             {
                                 ThunderboltServiceLifetime.Transient => kvp.Value.factory(resolver),
                                 ThunderboltServiceLifetime.Scoped when resolver is IThunderboltScope scope =>
-                                    kvp.Value.scopesInstances.TryGetValue(scope.Id, out object val)
+                                    kvp.Value.scopesInstances.TryGetValue(scope.Id, out object? val)
                                     ? val
                                     : kvp.Value.instanceSetter(scope.Id, kvp.Value.factory(scope)),
                                 ThunderboltServiceLifetime.Singleton or ThunderboltServiceLifetime.Scoped => kvp.Value.singletonInstanceGetter(resolver),
@@ -163,7 +163,7 @@ internal static class ThunderboltServiceRegistry
                                     {
                                         ThunderboltServiceLifetime.Transient => record.DictatedFactory(resolver, record.RegisteredImplSelector, record.RegisteredUserFactory),
                                         ThunderboltServiceLifetime.Scoped when resolver is IThunderboltScope scope =>
-                                            record.ScopesInstances.TryGetValue(scope.Id, out object val)
+                                            record.ScopesInstances.TryGetValue(scope.Id, out object? val)
                                             ? val
                                             : record.SetInstance(scope.Id, record.DictatedFactory(scope, record.RegisteredImplSelector, record.RegisteredUserFactory)),
                                         _ => null
@@ -172,7 +172,7 @@ internal static class ThunderboltServiceRegistry
                             return historicalValues.Concat(currentValue.AsEnumerable());
                         })
                         .Where(value => value is not null);
-                    return createEnumerableMethod.Invoke(null, new object[1] { enumerable });
+                    return createEnumerableMethod.Invoke(null, new object?[1] { enumerable })!;
                 });
                 return ThunderboltServiceLifetime.Transient; //open generic types are registered on the fly and therefore this shouldn't be singleton as there could always be new types
             }
