@@ -1,5 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
-  <Relationship Type="http://schemas.microsoft.com/packaging/2010/07/manifest" Target="/ThunderboltIoc.nuspec" Id="R43863DA7ADBA55BE" />
-  <Relationship Type="http://schemas.openxmlformats.org/package/2006/relationships/metadata/core-properties" Target="/package/services/metadata/core-properties/fd20976f5f3f491b8f500afa69307160.psmdcp" Id="R0C764EBB83340DBC" />
-</Relationships>
