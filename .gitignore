@@ -362,3 +362,6 @@ MigrationBackup/
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
 /Delete-BIN-OBJ-Folders.bat
+
+# Resulting build nuget packages
+output_packages/
