@@ -31,11 +31,21 @@ internal class ThunderboltServiceProviderFactory<TRegistration> : IServiceProvid
 
             if (isExternalNonPublicType || implIsExternalNonPublicType || serviceType.IsNonClosedGenericType())
             {
+#if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
                 privateTypes.TryAdd(serviceTypeName, new PrivateType(serviceType, null));
+#else
+                if (!privateTypes.ContainsKey(serviceTypeName))
+                    privateTypes.Add(serviceTypeName, new PrivateType(serviceType, null));
+#endif
             }
             if (implIsExternalNonPublicType || implType?.IsNonClosedGenericType() == true)
             {
+#if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
                 privateTypes.TryAdd(implTypeName!, new PrivateType(implType!, null));
+#else
+                if (!privateTypes.ContainsKey(implTypeName!))
+                    privateTypes.Add(implTypeName!, new PrivateType(implType!, null));
+#endif
             }
 
             var additionalTypes
@@ -54,7 +64,15 @@ internal class ThunderboltServiceProviderFactory<TRegistration> : IServiceProvid
                 = additionalTypes
                 .Concat(additionalImplTypes);
             foreach (Type additionalType in allAdditionalTypes)
+            {
+#if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
                 privateTypes.TryAdd(additionalType.GetFullyQualifiedName(), new PrivateType(additionalType, null));
+#else
+                string additionalTypeFullName = additionalType.GetFullyQualifiedName();
+                if (!privateTypes.ContainsKey(additionalTypeFullName))
+                    privateTypes.Add(additionalTypeFullName, new PrivateType(additionalType, null));
+#endif
+            }
 
             if (serviceDescriptor.ImplementationInstance is not null)
             {

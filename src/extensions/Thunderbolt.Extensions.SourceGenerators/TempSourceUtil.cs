@@ -1,6 +1,8 @@
 ﻿using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.CodeAnalysis;
 using Newtonsoft.Json;
+using Microsoft.Extensions.DependencyInjection;
+using System.Collections.Immutable;
 
 namespace Thunderbolt.Extensions.SourceGenerators;
 
@@ -8,15 +10,17 @@ internal static class TempSourceUtil
 {
     private static readonly string msGeneratorPath = typeof(ThunderboltMsSourceGenerator).Assembly.Location;
     private static readonly string newtonsoftPath = typeof(JsonConvert).Assembly.Location;
+    private static readonly string msDIAbstractionsPath = typeof(IServiceCollection).Assembly.Location;
+    private static readonly string collectionsImmutablePath = typeof(ImmutableArray).Assembly.Location;
+    private static readonly string reflectionMetadataPath = typeof(System.Reflection.Metadata.AssemblyFile).Assembly.Location;
 
     internal static string Emit(Compilation compilation, AnalyzerConfigOptions globalOptions, string registrationClassName)
     {
-        if (!globalOptions.TryGetValue("build_property.projectdir", out var projDir) || string.IsNullOrWhiteSpace(projDir)
-            || !globalOptions.TryGetValue("build_property.targetframework", out var tfm) || string.IsNullOrWhiteSpace(tfm)
-            || !globalOptions.TryGetValue("build_property.usingmicrosoftnetsdkweb", out var useWebSdkStr) || !bool.TryParse(useWebSdkStr, out bool useWebSdk)
-            || !globalOptions.TryGetValue("build_property.enablepreviewfeatures", out var enablePreviewFeaturesStr))
-            throw new InvalidOperationException();
-        bool.TryParse(enablePreviewFeaturesStr, out bool enablePreviewFeatures);
+        string projDir = globalOptions.GetString("build_property.projectdir");
+        string tfm = globalOptions.GetString("build_property.targetframework");
+        bool useWebSdk = globalOptions.GetBoolean("build_property.usingmicrosoftnetsdkweb");
+        bool enablePreviewFeatures = globalOptions.GetBoolean("build_property.enablepreviewfeatures");
+        
         var references = compilation
                 .References
                 .Select(r =>
@@ -180,6 +184,15 @@ namespace thunderbolt_types_util_proj
         <Reference Include=""Thunderbolt.Extensions.Abstractions"">
             <HintPath>{abstractionsPath}</HintPath>
         </Reference>
+        <Reference Include=""Microsoft.Extensions.DependencyInjection.Abstractions"">
+            <HintPath>{msDIAbstractionsPath}</HintPath>
+        </Reference>
+        <Reference Include=""System.Collections.Immutable"">
+            <HintPath>{collectionsImmutablePath}</HintPath>
+        </Reference>
+        <Reference Include=""System.Reflection.Metadata"">
+            <HintPath>{reflectionMetadataPath}</HintPath>
+        </Reference>
         <Reference Include=""Thunderbolt.Extensions.SourceGenerators"">
             <HintPath>{msGeneratorPath}</HintPath>
         </Reference>
@@ -189,4 +202,12 @@ namespace thunderbolt_types_util_proj
     </ItemGroup>
 </Project>";
     }
+
+    #region AnalyzerConfigOptions Extensions
+    private static string GetString(this AnalyzerConfigOptions options, string key)
+        => options.TryGetValue(key, out var option) ? option : throw new InvalidOperationException($"Could not find the required option: '{key}'");
+
+    private static bool GetBoolean(this AnalyzerConfigOptions options, string key)
+        => bool.TryParse(options.GetString(key), out bool boolean) && boolean;
+    #endregion
 }

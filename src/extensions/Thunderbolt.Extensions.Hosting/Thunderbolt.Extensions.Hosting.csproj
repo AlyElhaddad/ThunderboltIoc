@@ -1,22 +1,47 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <TargetFrameworks>netcoreapp3.1;net5.0;net6.0</TargetFrameworks>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
-    <LangVersion>10</LangVersion>
-    <Description>Thunderbolt extensions for .NET Generic host.</Description>
-    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
-    <RootNamespace>Thunderbolt.Extensions.Hosting</RootNamespace>
-    <ProduceReferenceAssemblies>false</ProduceReferenceAssemblies>
-  </PropertyGroup>
+	<PropertyGroup>
+		<TargetFrameworks>net48;netstandard2.0;netstandard2.1;netcoreapp3.1;net5.0;net6.0</TargetFrameworks>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+		<LangVersion>10</LangVersion>
+		<Description>Thunderbolt extensions for .NET Generic host.</Description>
+		<GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+		<RootNamespace>Thunderbolt.Extensions.Hosting</RootNamespace>
+		<ProduceReferenceAssemblies>false</ProduceReferenceAssemblies>
+	</PropertyGroup>
 
-  <ItemGroup>
-    <PackageReference Include="Microsoft.Extensions.Hosting" Version="6.0.0" />
-    <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="6.0.0" />
-  </ItemGroup>
+	<Choose>
+		<When Condition="'$(TargetFramework)' == 'netcoreapp3.1'">
+			<ItemGroup>
+				<PackageReference Include="Microsoft.Extensions.Hosting" Version="3.1.25" />
+				<PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="3.1.25" />
+			</ItemGroup>
+		</When>
+		<When Condition="'$(TargetFramework)' == 'net5.0'">
+			<ItemGroup>
+				<PackageReference Include="Microsoft.Extensions.Hosting" Version="5.0.0" />
+				<PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="5.0.0" />
+			</ItemGroup>
+		</When>
+		<Otherwise>
+			<ItemGroup>
+				<PackageReference Include="Microsoft.Extensions.Hosting" Version="6.0.1" />
+				<PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="6.0.0" />
+			</ItemGroup>
+		</Otherwise>
+	</Choose>
 
-  <ItemGroup>
-    <ProjectReference Include="..\Thunderbolt.Extensions.Abstractions\Thunderbolt.Extensions.Abstractions.csproj" />
-  </ItemGroup>
+	<Choose>
+		<When Condition="$(Configuration.Contains('Debug'))">
+			<ItemGroup>
+				<ProjectReference Include="..\Thunderbolt.Extensions.Abstractions\Thunderbolt.Extensions.Abstractions.csproj" />
+			</ItemGroup>
+		</When>
+		<Otherwise>
+			<ItemGroup>
+				<PackageReference Include="Thunderbolt.Extensions.Abstractions" Version="$(Version)" />
+			</ItemGroup>
+		</Otherwise>
+	</Choose>
 </Project>

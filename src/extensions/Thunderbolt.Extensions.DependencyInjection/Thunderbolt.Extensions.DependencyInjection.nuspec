@@ -18,34 +18,40 @@
 		<tags>Thunderbolt ThunderboltIoc roslyn analyzers code-generation ioc dependency-injection di inversion-of-control aot</tags>
 		<dependencies>
 			<group targetFramework="net48">
-				<dependency id="ThunderboltIoc.SourceGenerators" version="$version$"
+				<dependency id="Thunderbolt.Extensions.SourceGenerators" version="$version$"
 							exclude="build,compile,runtime,contentFiles,native" include='analyzers'/>
-				<dependency id="ThunderboltIoc.Abstractions" version="$version$" exclude="build,analyzers"/>
+				<dependency id="Thunderbolt.Extensions.Abstractions" version="$version$" exclude="build,analyzers"/>
+				<dependency id="Thunderbolt.Extensions.Hosting" version="$version$" exclude="build,analyzers"/>
 			</group>
 			<group targetFramework="netstandard2.0">
-				<dependency id="ThunderboltIoc.SourceGenerators" version="$version$"
+				<dependency id="Thunderbolt.Extensions.SourceGenerators" version="$version$"
 							exclude="build,compile,runtime,contentFiles,native" include='analyzers'/>
-				<dependency id="ThunderboltIoc.Abstractions" version="$version$" exclude="build,analyzers"/>
+				<dependency id="Thunderbolt.Extensions.Abstractions" version="$version$" exclude="build,analyzers"/>
+				<dependency id="Thunderbolt.Extensions.Hosting" version="$version$" exclude="build,analyzers"/>
 			</group>
 			<group targetFramework="netstandard2.1">
-				<dependency id="ThunderboltIoc.SourceGenerators" version="$version$"
+				<dependency id="Thunderbolt.Extensions.SourceGenerators" version="$version$"
 							exclude="build,compile,runtime,contentFiles,native" include='analyzers'/>
-				<dependency id="ThunderboltIoc.Abstractions" version="$version$" exclude="build,analyzers"/>
+				<dependency id="Thunderbolt.Extensions.Abstractions" version="$version$" exclude="build,analyzers"/>
+				<dependency id="Thunderbolt.Extensions.Hosting" version="$version$" exclude="build,analyzers"/>
 			</group>
 			<group targetFramework="netcoreapp3.1">
-				<dependency id="ThunderboltIoc.SourceGenerators" version="$version$"
+				<dependency id="Thunderbolt.Extensions.SourceGenerators" version="$version$"
 							exclude="build,compile,runtime,contentFiles,native" include='analyzers'/>
-				<dependency id="ThunderboltIoc.Abstractions" version="$version$" exclude="build,analyzers"/>
+				<dependency id="Thunderbolt.Extensions.Abstractions" version="$version$" exclude="build,analyzers"/>
+				<dependency id="Thunderbolt.Extensions.Hosting" version="$version$" exclude="build,analyzers"/>
 			</group>
 			<group targetFramework="net5.0">
-				<dependency id="ThunderboltIoc.SourceGenerators" version="$version$"
+				<dependency id="Thunderbolt.Extensions.SourceGenerators" version="$version$"
 							exclude="build,compile,runtime,contentFiles,native" include='analyzers'/>
-				<dependency id="ThunderboltIoc.Abstractions" version="$version$" exclude="build,analyzers"/>
+				<dependency id="Thunderbolt.Extensions.Abstractions" version="$version$" exclude="build,analyzers"/>
+				<dependency id="Thunderbolt.Extensions.Hosting" version="$version$" exclude="build,analyzers"/>
 			</group>
 			<group targetFramework="net6.0">
-				<dependency id="ThunderboltIoc.SourceGenerators" version="$version$"
+				<dependency id="Thunderbolt.Extensions.SourceGenerators" version="$version$"
 							exclude="build,compile,runtime,contentFiles,native" include='analyzers'/>
-				<dependency id="ThunderboltIoc.Abstractions" version="$version$" exclude="build,analyzers"/>
+				<dependency id="Thunderbolt.Extensions.Abstractions" version="$version$" exclude="build,analyzers"/>
+				<dependency id="Thunderbolt.Extensions.Hosting" version="$version$" exclude="build,analyzers"/>
 			</group>
 		</dependencies>
 	</metadata>
@@ -56,8 +62,8 @@
 		<file src="_._" target="lib\.NETStandard2.1\_._" />
 		<file src="_._" target="lib\net5.0\_._" />
 		<file src="_._" target="lib\net6.0\_._" />
-		<file src="..\..\assets\thunderbolt_128.png" target="images\"/>
-		<file src="..\extensions\targets\SharedTargets.targets" target="build\$id$.targets"/>
+		<file src="..\..\..\assets\thunderbolt_128.png" target="images\"/>
+		<file src="..\targets\SharedTargets.targets" target="build\$id$.targets"/>
 		<!--<file src="..\..\README.md" target="docs\"/>-->
 	</files>
 </package>

@@ -1,27 +1,27 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <TargetFrameworks>netcoreapp3.1;net5.0;net6.0</TargetFrameworks>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
-    <LangVersion>10</LangVersion>
-    <ProduceReferenceAssemblies>false</ProduceReferenceAssemblies>
-  </PropertyGroup>
+	<PropertyGroup>
+		<TargetFrameworks>netcoreapp3.1;net5.0;net6.0</TargetFrameworks>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+		<LangVersion>10</LangVersion>
+		<ProduceReferenceAssemblies>false</ProduceReferenceAssemblies>
+	</PropertyGroup>
 
-  <ItemGroup>
-    <FrameworkReference Include="Microsoft.AspNetCore.App" />
-  </ItemGroup>
+	<ItemGroup>
+		<FrameworkReference Include="Microsoft.AspNetCore.App" />
+	</ItemGroup>
 
-  <Choose>
-    <When Condition="$(Configuration.Contains('Debug'))">
-      <ItemGroup>
-        <ProjectReference Include="..\Thunderbolt.Extensions.Hosting\Thunderbolt.Extensions.Hosting.csproj" />
-      </ItemGroup>
-    </When>
-    <When Condition="$(!Configuration.Contains('Debug'))">
-      <ItemGroup>
-        <PackageReference Include="Thunderbolt.Extensions.Hosting" Version="$(Version)" />
-      </ItemGroup>
-    </When>
-  </Choose>
+	<Choose>
+		<When Condition="$(Configuration.Contains('Debug'))">
+			<ItemGroup>
+				<ProjectReference Include="..\Thunderbolt.Extensions.Abstractions\Thunderbolt.Extensions.Abstractions.csproj" />
+			</ItemGroup>
+		</When>
+		<Otherwise>
+			<ItemGroup>
+				<PackageReference Include="Thunderbolt.Extensions.Abstractions" Version="$(Version)" />
+			</ItemGroup>
+		</Otherwise>
+	</Choose>
 </Project>

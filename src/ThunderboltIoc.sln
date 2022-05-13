@@ -36,7 +36,14 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Thunderbolt.Extensions.AspN
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Thunderbolt.Extensions.SourceGenerators", "extensions\Thunderbolt.Extensions.SourceGenerators\Thunderbolt.Extensions.SourceGenerators.csproj", "{AA4CDEB3-215B-4D7C-A1C7-B093BE3C8198}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Thunderbolt.GeneratorAbstractions", "Thunderbolt.GeneratorAbstractions\Thunderbolt.GeneratorAbstractions.csproj", "{168924FA-5B03-4F81-AE19-32CDA8342AD9}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Thunderbolt.GeneratorAbstractions", "Thunderbolt.GeneratorAbstractions\Thunderbolt.GeneratorAbstractions.csproj", "{168924FA-5B03-4F81-AE19-32CDA8342AD9}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "targets", "targets", "{95F0FE6D-C22C-4E15-93D6-634107853202}"
+	ProjectSection(SolutionItems) = preProject
+		extensions\targets\SharedTargets.targets = extensions\targets\SharedTargets.targets
+	EndProjectSection
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Thunderbolt.Extensions.AspNetCore.DependencyInjection", "extensions\Thunderbolt.Extensions.AspNetCore.DependencyInjection\Thunderbolt.Extensions.AspNetCore.DependencyInjection.csproj", "{517A4599-58FC-4FB3-8A6B-10F41C71814F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -81,9 +88,11 @@ Global
 		{AA4CDEB3-215B-4D7C-A1C7-B093BE3C8198}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{AA4CDEB3-215B-4D7C-A1C7-B093BE3C8198}.Release|Any CPU.Build.0 = Release|Any CPU
 		{168924FA-5B03-4F81-AE19-32CDA8342AD9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{168924FA-5B03-4F81-AE19-32CDA8342AD9}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{168924FA-5B03-4F81-AE19-32CDA8342AD9}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{168924FA-5B03-4F81-AE19-32CDA8342AD9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{517A4599-58FC-4FB3-8A6B-10F41C71814F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{517A4599-58FC-4FB3-8A6B-10F41C71814F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{517A4599-58FC-4FB3-8A6B-10F41C71814F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{517A4599-58FC-4FB3-8A6B-10F41C71814F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -95,6 +104,8 @@ Global
 		{ECDB1A78-522E-4442-86BF-E8D35335D715} = {F90D6481-88D8-43BB-922C-71443D0D8845}
 		{EE810604-2CA4-4731-98C2-0A0C245601E6} = {F90D6481-88D8-43BB-922C-71443D0D8845}
 		{AA4CDEB3-215B-4D7C-A1C7-B093BE3C8198} = {F90D6481-88D8-43BB-922C-71443D0D8845}
+		{95F0FE6D-C22C-4E15-93D6-634107853202} = {F90D6481-88D8-43BB-922C-71443D0D8845}
+		{517A4599-58FC-4FB3-8A6B-10F41C71814F} = {F90D6481-88D8-43BB-922C-71443D0D8845}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {F8400F3C-F7D7-45FD-85A7-7F585DE36652}

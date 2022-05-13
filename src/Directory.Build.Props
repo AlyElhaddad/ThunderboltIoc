@@ -1,6 +1,6 @@
 <Project>
   <PropertyGroup>
-    <Version>2.0.0-pre1</Version>
+    <Version>2.0.0-pre</Version>
     <Authors>Aly Elhaddad</Authors>
     <Owners>Aly Elhaddad</Owners>
     <PackageProjectUrl>https://github.com/AlyElhaddad/ThunderboltIoc</PackageProjectUrl>
@@ -20,7 +20,7 @@
   
   <ItemGroup>
     <None Include="..\..\assets\thunderbolt_128.png" Pack="true" Visible="false" PackagePath="images\thunderbolt_128.png"/>
-    <None Include="..\..\README.md" Pack="true" Visible="false" PackagePath="docs\README.md"/>
+    <!--<None Include="..\..\README.md" Pack="true" Visible="false" PackagePath="docs\README.md"/>-->
   </ItemGroup>
 
 </Project>
