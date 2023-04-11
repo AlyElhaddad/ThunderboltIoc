@@ -26,7 +26,8 @@ internal static class RoslynSemanticExtensions
             return null;
         else if (typeSymbol is ITypeParameterSymbol typeParamSymbol)
             return $"{typeParamSymbol.DeclaringType.GetFullyQualifiedName(true)}@{typeSymbol.Name}";
-        return $"{(typeSymbol.ContainingType is INamedTypeSymbol containingType ? containingType.GetFullyQualifiedName() : typeSymbol.ContainingNamespace.GetFullNamespaceName())}.{typeSymbol.Name}{(!withoutGenerics && typeSymbol is INamedTypeSymbol namedTypeSymbol && namedTypeSymbol.IsGenericType ? $"<{string.Join(", ", namedTypeSymbol.TypeArguments.Select(p => p.GetFullyQualifiedName()))}>" : "")}";
+
+        return $"{(typeSymbol.ContainingType is INamedTypeSymbol containingType ? containingType.GetFullyQualifiedName() : typeSymbol.ContainingNamespace.GetFullNamespaceName())}.{typeSymbol.Name}{(!withoutGenerics && typeSymbol is INamedTypeSymbol namedTypeSymbol && namedTypeSymbol.IsGenericType ? $"<{string.Join(", ", (namedTypeSymbol.IsUnboundGenericType ? namedTypeSymbol.TypeParameters.Cast<ITypeSymbol>() : namedTypeSymbol.TypeArguments).Select(p => p.GetFullyQualifiedName()))}>" : "")}";
     }
     public static string? GetFullyQualifiedName(this INamedTypeSymbol? namedTypeSymbol)
         => namedTypeSymbol.GetFullyQualifiedName(false);
@@ -36,7 +37,8 @@ internal static class RoslynSemanticExtensions
             return null;
         else if (namedTypeSymbol is ITypeParameterSymbol typeParamSymbol)
             return $"{typeParamSymbol.DeclaringType.GetFullyQualifiedName(true)}@{namedTypeSymbol.Name}";
-        return $"{(namedTypeSymbol.ContainingType is INamedTypeSymbol containingType ? containingType.GetFullyQualifiedName() : namedTypeSymbol.ContainingNamespace.GetFullNamespaceName())}.{namedTypeSymbol.Name}{(!withoutGenerics && namedTypeSymbol.IsGenericType ? $"<{string.Join(", ", namedTypeSymbol.TypeArguments.Select(p => p.GetFullyQualifiedName()))}>" : "")}";
+
+        return $"{(namedTypeSymbol.ContainingType is INamedTypeSymbol containingType ? containingType.GetFullyQualifiedName() : namedTypeSymbol.ContainingNamespace.GetFullNamespaceName())}.{namedTypeSymbol.Name}{(!withoutGenerics && namedTypeSymbol.IsGenericType ? $"<{string.Join(", ", (namedTypeSymbol.IsUnboundGenericType ? namedTypeSymbol.TypeParameters.Cast<ITypeSymbol>() : namedTypeSymbol.TypeArguments).Select(p => p.GetFullyQualifiedName()))}>" : "")}";
     }
     public static IEnumerable<INamedTypeSymbol> GetAllTypeMembers(this INamedTypeSymbol namedTypeSymbol)
     {
@@ -95,7 +97,7 @@ internal static class RoslynSemanticExtensions
     {
         if (typeSymbol is not INamedTypeSymbol namedTypeSymbol)
             return Enumerable.Empty<ITypeSymbol>();
-        return namedTypeSymbol.TypeArguments;
+        return namedTypeSymbol.IsUnboundGenericType ? namedTypeSymbol.TypeParameters : namedTypeSymbol.TypeArguments;
     }
 
     public static IEnumerable<ITypeSymbol> AllGenericArgs(this ITypeSymbol typeSymbol)
@@ -155,13 +157,18 @@ internal static class RoslynSemanticExtensions
     public static bool AreAssembliesEqual(this IAssemblySymbol assembly, IAssemblySymbol equalAssembly)
     {
         return
-            assembly.Name == equalAssembly.Name
-            && assembly.TypeNames.Count == equalAssembly.TypeNames.Count
-            &&
-                assembly
-                .TypeNames
-                .Zip(equalAssembly.TypeNames, (a, b) => (a, b))
-                .All(x => x.a == x.b);
+            (assembly, equalAssembly) is (null, null)
+            ||
+            (
+                (assembly, equalAssembly) is (not null, not null)
+                && assembly.Name == equalAssembly.Name
+                && assembly.TypeNames.Count == equalAssembly.TypeNames.Count
+                &&
+                    assembly
+                    .TypeNames
+                    .Zip(equalAssembly.TypeNames, (a, b) => (a, b))
+                    .All(x => x.a == x.b)
+            );
     }
     public static bool AreDefinitionsEqual(this IMethodSymbol method, IMethodSymbol equalMethod)
     {

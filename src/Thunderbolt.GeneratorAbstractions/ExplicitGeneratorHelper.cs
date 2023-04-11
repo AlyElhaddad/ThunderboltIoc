@@ -2,6 +2,9 @@
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Operations;
 
+using System.Reflection.Metadata.Ecma335;
+using System.Text.RegularExpressions;
+
 namespace Thunderbolt.GeneratorAbstractions;
 
 internal static class ExplicitGeneratorHelper
@@ -35,8 +38,31 @@ internal static class ExplicitGeneratorHelper
 #pragma warning restore RS1024 // Symbols should be compared for equality
             foreach (var (syntax, op) in invExpressions)
             {
-                if ((syntax.Expression as MemberAccessExpressionSyntax)?.Name is not GenericNameSyntax genericName)
+                var syntaxExpressionName = (syntax.Expression as MemberAccessExpressionSyntax)?.Name;
+                var (genericName, identifierName) = (syntaxExpressionName as GenericNameSyntax, syntaxExpressionName as IdentifierNameSyntax);
+
+                if (identifierName is not null
+                    && op.Arguments.Length == 1
+                    && op.Arguments[0].Parameter is IParameterSymbol parameterSymbol
+                    && Regex.IsMatch(op.TargetMethod.OriginalDefinition.Name, @"Add(Transient|Scoped|Singleton)Factory")
+                    && parameterSymbol.Type.GenericArgs() is IEnumerable<ITypeSymbol> genericArgs
+                    && genericArgs.Count() == 1)
+                {
+                    //factory, inferred type
+                    yield return new ServiceDescriptor(
+                        lifetime: null,
+                        serviceType: TypeDescriptor.FromTypeSymbol(genericArgs.First(), compilation),
+                        implType: null,
+                        implSelectorTypes: null,
+                        hasFactory: true,
+                        shouldUseFullDictate: false);
                     continue;
+                }
+                else if (genericName is null)
+                {
+                    continue;
+                }
+
                 if (!syntax.ArgumentList.Arguments.Any())
                 {
                     TypeSyntax serviceArg = genericName.TypeArgumentList.Arguments[0];
@@ -88,6 +114,10 @@ internal static class ExplicitGeneratorHelper
                             shouldUseFullDictate: false);
                         continue;
                     }
+
+                    if (syntax.ArgumentList.Arguments.Count == 0)
+                        continue;
+
                     //implSelector signature
                     ArgumentSyntax arg = syntax.ArgumentList.Arguments[0];
                     IEnumerable<TypeOfExpressionSyntax>? typeofStatements = null;

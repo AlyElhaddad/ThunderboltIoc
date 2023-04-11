@@ -24,12 +24,12 @@ public class ThunderboltSourceGenerator : ISourceGenerator
     public virtual void Execute(GeneratorExecutionContext context)
     {
         //        //this is for the purpose of debugging the source generator itself and can be ignored
-//#if DEBUG
+        //#if DEBUG
 //        if (!System.Diagnostics.Debugger.IsAttached)
 //        {
 //            System.Diagnostics.Debugger.Launch();
 //        }
-//#endif
+        //#endif
 
         if (context.ParseOptions is not CSharpParseOptions parseOptions || context.Compilation is not CSharpCompilation compilation || compilation.Options is not CSharpCompilationOptions compilationOptions)
         {

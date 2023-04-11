@@ -132,17 +132,19 @@ internal class ThunderboltAnalyzer : DiagnosticAnalyzer
                     .SelectMany(t =>
                         t.GetRoot()
                         .DescendantNodes()
-                        .OfType<InvocationExpressionSyntax>())
-                    .Any(invExp => invExp.Expression is MemberAccessExpressionSyntax memberExp
-                        && memberExp.Name is GenericNameSyntax genericName
-                        && genericName.Identifier.ValueText is Consts.AttachMethodName or Consts.UseMethodName //or .UseThunderbolt
-                        && genericName.TypeArgumentList.Arguments.Count == 1
-                        && context.SemanticModel.GetOperation(invExp) is IInvocationOperation invOp
-                        && invOp.TargetMethod.Name is Consts.AttachMethodName or Consts.UseMethodName
-                        && invOp.TargetMethod.ContainingType.GetFullyQualifiedName() is Consts.ActivatorTypeFullName or Consts.ExtensionsTypeFullName //or ThunderboltExtensions
-                        && genericName.TypeArgumentList.Arguments.First() is TypeSyntax typeSyntax
-                        && context.SemanticModel.GetSpeculativeTypeInfo(typeSyntax.SpanStart, typeSyntax, SpeculativeBindingOption.BindAsTypeOrNamespace).Type is INamedTypeSymbol regType
-                        && regType.GetFullyQualifiedName() == fullName))
+                        .OfType<InvocationExpressionSyntax>()
+                        .Select(invExp => invExp.Expression is MemberAccessExpressionSyntax memberExp
+                                && memberExp.Name is GenericNameSyntax genericName
+                                && genericName.Identifier.ValueText is Consts.AttachMethodName or Consts.UseMethodName //or .UseThunderbolt
+                                && genericName.TypeArgumentList.Arguments.Count == 1
+                                && context.SemanticModel.SyntaxTree.GetRoot().Contains(invExp)
+                                && context.SemanticModel.GetOperation(invExp) is IInvocationOperation invOp
+                                && invOp.TargetMethod.Name is Consts.AttachMethodName or Consts.UseMethodName
+                                && invOp.TargetMethod.ContainingType.GetFullyQualifiedName() is Consts.ActivatorTypeFullName or Consts.ExtensionsTypeFullName //or ThunderboltExtensions
+                                && genericName.TypeArgumentList.Arguments.First() is TypeSyntax typeSyntax
+                                && context.SemanticModel.GetSpeculativeTypeInfo(typeSyntax.SpanStart, typeSyntax, SpeculativeBindingOption.BindAsTypeOrNamespace).Type is INamedTypeSymbol regType
+                                && regType.GetFullyQualifiedName() == fullName))
+                    .Any(condition => condition))
                 {
                     context.ReportDiagnostic(Diagnostic.Create(Descriptors.RegistrationNotAttached, location, name));
                 }

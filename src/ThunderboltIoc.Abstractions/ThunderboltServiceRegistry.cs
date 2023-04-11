@@ -108,7 +108,7 @@ internal record HistoricalThunderboltServiceRegistry
 internal static class ThunderboltServiceRegistry
 {
     internal static readonly Dictionary<int, List<Action>> scopeClearanceActions = new();
-    internal static readonly Dictionary<Type, GenericRegistryAccessor> generic = new(capacity: 4); // this is first accessed via the container's ctor, into which we later add two more registrations, making it a total of 3 (container, scope, resolver, serviceProvider)
+    internal static readonly Dictionary<Type, GenericRegistryAccessor> generic = new(capacity: 4); // this is first accessed via the container's ctor, into which we later add two more registrations, making it a total of 4 (container, scope, resolver, serviceProvider)
 
     internal static InvalidOperationException UnableToLocateException(Type t)
         => new($"Unable to locate a registered implementation for a service of type '{t}'.");
@@ -166,6 +166,7 @@ internal static class ThunderboltServiceRegistry
                                             record.ScopesInstances.TryGetValue(scope.Id, out object? val)
                                             ? val
                                             : record.SetInstance(scope.Id, record.DictatedFactory(scope, record.RegisteredImplSelector, record.RegisteredUserFactory)),
+                                        ThunderboltServiceLifetime.Singleton or ThunderboltServiceLifetime.Scoped => record.GetSingleton(resolver),
                                         _ => null
                                     };
                                 });

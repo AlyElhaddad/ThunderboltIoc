@@ -31,10 +31,11 @@ public static class ThunderboltExtensions
             ThunderboltMsRegistration.BuilderServices = webAppBuilder.Services;
             return webAppBuilder;
         }
-        var replacement = ServiceDescriptor.Singleton<IServiceProviderFactory<IServiceCollection>>(new ThunderboltServiceProviderFactory<TRegistration>());
+        var factory = new ThunderboltServiceProviderFactory<TRegistration>();
+        var replacement = ServiceDescriptor.Singleton<IServiceProviderFactory<IServiceCollection>>(factory);
         webAppBuilder.Services.Replace(replacement);
         webAppBuilder.WebHost.ConfigureServices(services => services.Replace(replacement));
-        webAppBuilder.Host.UseServiceProviderFactory(new ThunderboltServiceProviderFactory<TRegistration>());
+        webAppBuilder.Host.UseServiceProviderFactory(factory);
         return webAppBuilder;
     }
 #endif

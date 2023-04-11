@@ -307,40 +307,67 @@ By now, your regex argument should be matching a number of services, and your im
 This is where you may specify a regular expression that when matched with any type, does not get registered via attribute registration (and/or regex-based attribute registration).
 # 7. How to resolve/get your instances
 Getting service instances with respect to their registered lifetimes is as simple as using `Get<TService>()` on an `IThunderboltResolver`. An `IThunderboltResolver` may either be an `IThunderboltContainer` or an `IThunderboltScope`.
+
+Getting a service would also result in getting all the other service (if any) in the subject service&apos;s constructor with their respective lifetimes.
 ## 7.1. Obtaining an IThunderboltContainer
-Provided you have attached at least one **partial** class that inherits `ThunderboltRegistration` via `ThunderboltActivator.Attach`, it is safe to use `ThunderboltActivator.Container` property to get the singleton `IThunderboltContainer` instance. If you already have an `IThunderboltResolver`, you may also get the same container using `resolver.Get<IThunderboltContainer>()`.
+Provided you have attached at least one **partial** class that inherits `ThunderboltRegistration` via `ThunderboltActivator.Attach` (or made a call to `.UseThunderbolt`), it is safe to use `ThunderboltActivator.Container` property to get the singleton `IThunderboltContainer` instance. If you already have an `IThunderboltResolver`, you may also get the same container using `resolver.Get<IThunderboltContainer>()`.
 ## 7.2. Obtaining an IThunderboltScope
 Using an `IThunderboltContainer`, you may create a new scope using `container.CreateScope()`. If you already have an `IThunderboltResolver`, you may create a new scope using `resolver.Get<IThunderboltScope>()`.
-# 8. Supported project types
-All project types are inherently supported and your project wouldn&apos;t complain about working with ThunderboltIoc. However, up until the moment of writing this, there is no explicit integration with `Microsoft.Extensions.DependencyInjection`, which to some extent limits our options when working with .Net Core projects if we wanted to utilize Microsoft&apos;s DI.
+## 7.3. Getting an IEnumerable&lt;T&gt;
+If `IEnumerable<T>` was directly registered before, you shall get the implementation you had expected. Otherwise, which is more likely, you should get all the services you have registered that are of (or inherit) type `T` with their respective lifetimes. If only one service has that type, you get an `IEnumerable` with only that service in it. If no services of type `T` were registered, you get an empty `IEnumerable`.
 
-It is intended for ThunderboltIoc to integrate with `Microsoft.Extensions.DependencyInjection` in the future, but it the meantime, there would be no harm in using both frameworks together side-by-sidy; that however wouldn&apos;t let us fully benefit from ThunderboltIoc&apos;s superior performance all the time.
+# 8. ASP.NET Core, MAUI and `Microsoft.Extensions.DependencyInjection`
+This section concerns only ASP.NET Core users, MAUI users and anyone whose project heavily relies on `Microsoft.Extensions.DependencyInjection`.
+## 8.1. How it works
+It is good to know how it works but if you find this longer than necessary, you could still skip this section and go to the how to use it section.
 
-It is perfectly safe to use ThunderboltIoc for any .Net C# project as a standalone IoC.
+Integrating with `Microsoft.Extensions.DependencyInjection` (let me refer to this as MSDI later on in this section) might&apos;ve been the most challenging part of this framework. The fundamental prinicple of this framework is to provide dependency injection for .Net without reflection. That however is not completely possible with MSDI. The reason why it&apos;s not possible is that MSDI provides public APIs to register non-public (e.g `internal`) services. A lot of non-public services get registered by default in your ASP.NET Core application without you knowing about it, and many other 3rd-party frameworks also register non-public services with MSDI. Let us agree on the obvious fact that generated code, if written by hand, should compile the same way as how it would if it was generated. Consuming non-public (e.g internal) services of other assemblies from our project should definitely not compile and therefore generating code to accomplish this mission would not be viable.
 
-# 9. Known limitations
-The only services for which code generation can work are services that have exactly one constructor that is public. It is planned to lift this restriction in future versions.
+At this point, compromises had to be made. Thunderbolt will no longer be reflectionless except that reflection is minimized. There will be exactly two cases where reflection is used:
+- The service being registered (or its implementation) is not public.
+- The service being registered is an open-generic service (e.g `IService<T>` maps to `Implementation<T>` where `T` can be anything).
+*p.s that being said, other generic types would still **not** utilize reflection*
 
-# 10. Planned for future versions
-## 10.1. Lift the single public constructor restriction.
-As mentioned in the section above, it is feasible and desired to remove this limitation.
-## 10.2. Better source generation exception handling
-Currently, in the best-case scenario and if you follow the documentation, we shouldn&apos;t worry about source generation exceptions. However, upon failing to adhere to the documentation, it is possible that an unhandled exception might arise. In such a case, the source generator might (or might not) fail at the whole process. When that happens, it is possible that no code gets generated at all (you would get a notification in the build output but you might not notice it).
+In other words: for each service registered via MSDI, if it was public and wasn&apos;t open-generic, reflection shall **not** take place.
 
-It is planned to provide better exception handling so that failure to generate code for a particular service wouldn&apos;t cause the whole process to fail. It would also be nice to generate relevant warnings or errors.
+Another problem that comes with integrating with MSDI is that services are registered during runtime whereas Thunderbolt is a compile-time-based framework. That really is an unpleasant situation that had to have an unpleasant solution. Your project would get compiled during the source-generation process and the code used to register services would be used to collect information about those services and then send back this information to the source-generator to do its job; and then continue your original compilation. That sounds both heavy and messy, and this can be right to some extent. Except that it doesn&apos;t seem like anything could be done about it since this is a compile-time-based framework that had to integrate with a runtime-based framework.
 
-## 10.3. Verify no cyclic dependencies exist
-Currently, it is possible to fall into an infinite resolve operation where one (or more) service&apos;s dependencies may directly or indirectly depend on the same service.
+The process of compiling and running a code during the original compilation could somewhat be heavy, specially for lower-specs computers, which could throttle build times for each build. It is intended to add a configurable option (that say, works only in DEBUG or RELEASE), to use MSDI for services registered using MSDI, and use Thunderbolt for services registered using Thunderbolt. This way we would not need to compile and run anything during the source-generation process, which would minimize the overhead in the day-to-day development environment and would still let us have the full performance benefit in production environment.
+## 8.2. How to use it
 
-## 10.4. Analyzers
-It would be beneficial to have static code analyzers that show you warnings about failing to adhere to the best practices discussed in the documentation. For instance, generate a warning that tells you that a class you created that inherits `ThunderboltRegistration` does not have the **partial** modifier.
+## 8.3. 
 
-## 10.5. Property Injection
-As is the case with any feature-rich IoC framework, property injection is a dependency injection style that is not currently supported by this framework.
+# 9. Supported project types
+All C# .Net project types are supported.
 
-## 10.6. Automatic object disposal
-Disposing an `IThunderboltScope` should in turn dispose every `IDisposable` scoped service saved in the corresponding `IThunderboltScope`.
+It is safe to rely on Thunderbolt either alone or integrated with `Microsoft.Extensions.DependencyInjection`.
 
-## 10.7. Integration with Microsoft.Extensions.DependencyInjection
-The goal is to provide an intuitive API to effectively replace the default `IServiceProvider` of Microsoft&apos;s DI. Currently, `IThunderboltResolver` already implements `System.IServiceProvider` but no present elegant integration exists.
+# 10. Known limitations
+## 10.1. Tools and versions
+Source-generators are relatively new to C# and may not be fully supported or not fully compatible with older versions and tools; and since this is a source-generators-based framework, the same limitations would apply to it.
+### 10.1.1. Visual Studio
+You&apos;re going to need to build your project with either Visual Studio 2022 or 2019 (version 16.7 or later).
+*It would also work to build the project via the CLI using the `dotnet build` util.*
+### 10.1.2 Language
+This is supposed to work only with C# projects. Other .Net languages are not supported.
+### 10.1.3. Language Version
+C# version 9 or later is required for source-generators feature to work. You can make sure of that by adding `<LangVersion>9</LangVersion>` to your `*.csproj` file.
+### 10.1.4 Packages Format
+The `packages.config` format may not work with this framework. Use the `PackageReference` format instead.
+Here is a guid to [Migrate from packages.config to PackageReference](https://docs.microsoft.com/en-us/nuget/consume-packages/migrate-packages-config-to-package-reference "Migrate from packages.config to PackageReference").
+## 10.2. Runtime reflection-based service registration
+This comes against the whole purpose of this project, but it is nonetheless internally supported. It is inteded to expose the relevant APIs later, but for now, this counts as a limitation.
+## 10.3. Open-generics
+Open-generics is a feature in other dependency injection frameworks that is supported internally in this framework. It is intended to expose the relevant APIs in the near future but it remains a limitation in the meantime.
+## 10.4. Unregistering services
+Unregistering services that were registered earlier is not supported by this framework. It could be supported but why would one really want to unregister a service that they have registered?
 
+
+
+# 11. Planned for future versions
+## 11.1. Expose the APIs for runtime service registration
+This defies the idea of a compile-time-based reflectionless dependency injection but nonetheless it is something that this framework can do and thus it would be nice to let users take advantage of this if they would like even though it is not recommended.
+## 11.2. Expose the APIs for open-generic service registration
+Open-generics feature (`IService<T>` maps to `Implementation<T>` where `T` can be anything) was not originally supported by this framework. It is however supported in `Microsoft.Extensions.DependencyInjection`. In order to integrate with the latter, internal support for the feature had to take place. It is nevertheless not part of the public APIs of this framework yet.
+## 11.3. Add a configurable option to decide whether or not to use Microsoft.Extensions.DependencyInjection
+Thunderbolt currently integrates with `Microsoft.Extensions.DependencyInjection`. Microsoft&apos;s framework supports runtime service registration and web apps by default register too many non-public services in other assemblies. Third-party frameworks that integrate with Microsoft&apos;s framework can also register non-public services in their assemblies. Non-public APIs are inherently not usable in client assembly and therefore whatever code you generate, it just wouldn&apos;t work. In order to work around that and still integrate with Microsoft&apos;s framework, we would compile and run the code that registers services for Microsoft&apos;s framework first, and then get the information we need and after that work with this information to generate the code necessary to minimize relying on reflection (that is necessary for non-public APIs). The process of compiling and running a code during the original compilation could somewhat be heavy, specially for lower-specs computers, which could throttle build times for each build. It is intended to add a configurable option (that say, works only in DEBUG or RELEASE), to use Microsoft&apos;s framework for services registered using that framework, and use Thunderbolt for services registered using this framework. This way we would not need to compile and run anything during the source-generation process, which would minimize the overhead in the day-to-day development environment and would still let us have the full performance benefit in production environment.

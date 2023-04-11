@@ -199,6 +199,7 @@ namespace thunderbolt_types_util_proj
         <Reference Include=""{tempRefName}"">
             <HintPath>{tempRefPath}</HintPath>
         </Reference>
+        <PackageReference Include=""Microsoft.CodeAnalysis"" Version=""4.5.0"" />
     </ItemGroup>
 </Project>";
     }

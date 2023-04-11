@@ -15,7 +15,7 @@ internal static class DependencyHelper
             .Where(ctorTypes =>
                 ctorTypes.All(p =>
                     services.Any(s => p.MatchesService(s))))
-            .OrderBy(ctorTypes => ctorTypes.Count());
+            .OrderByDescending(ctorTypes => ctorTypes.Count());
         if (!typeDescriptor.IsImplemented || !bestCtorsSorted.Any())
         {
             throw new MissingMethodException($"Could not find a suitable constructor for type '{typeDescriptor.Name.RemovePrefix(Consts.global)}'.");
@@ -75,7 +75,7 @@ internal static class DependencyHelper
         HashSet<string> cyclicDependencies)
     {
         bool hasCyclicDependencies = false;
-        foreach (ServiceDescriptor serviceDescriptor in services)
+        foreach (ServiceDescriptor serviceDescriptor in services.Where(service => !service.HasFactory))
         {
             if (visitingServices.Add(serviceDescriptor))
             {
