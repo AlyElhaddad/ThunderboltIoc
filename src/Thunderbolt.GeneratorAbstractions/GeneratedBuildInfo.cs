@@ -1,0 +1,18 @@
+using System;
+namespace Thunderbolt.GeneratorAbstractions;
+public static class GeneratedBuildInfo
+{
+public static string Version => "2.0.0-pre6";
+public static string DefineConstants => @"TRACE
+RELEASE
+NETSTANDARD
+NETSTANDARD2_0
+NETSTANDARD1_0_OR_GREATER
+NETSTANDARD1_1_OR_GREATER
+NETSTANDARD1_2_OR_GREATER
+NETSTANDARD1_3_OR_GREATER
+NETSTANDARD1_4_OR_GREATER
+NETSTANDARD1_5_OR_GREATER
+NETSTANDARD1_6_OR_GREATER
+NETSTANDARD2_0_OR_GREATER";
+}

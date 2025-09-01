@@ -1,6 +1,5 @@
 ﻿using Microsoft.CodeAnalysis;
 
-using System.ComponentModel;
 using System.Text;
 
 namespace Thunderbolt.GeneratorAbstractions;
@@ -26,46 +25,98 @@ internal struct RequiredField
 internal static class GeneratorHelper
 {
     #region required fields
-    private static void AddTypeField(IDictionary<TypeDescriptor, RequiredField> requiredFields, TypeDescriptor type)
+    private static void AddTypeField(IDictionary<TypeDescriptor, IDictionary<int, RequiredField>> requiredFields, TypeDescriptor type, int serviceDefinitionNumber)
     {
-        if (requiredFields.TryGetValue(type, out RequiredField requiredField))
-            requiredField = requiredField with { Type = true };
+        if (requiredFields.TryGetValue(type, out IDictionary<int, RequiredField>? requiredFieldDict))
+        {
+            if (requiredFieldDict.TryGetValue(serviceDefinitionNumber, out RequiredField requiredField))
+            {
+                requiredField = requiredField with { Type = true };
+            }
+            else
+            {
+                requiredField = new RequiredField() with { Type = true };
+            }
+            requiredFieldDict[serviceDefinitionNumber] = requiredField;
+        }
         else
-            requiredField = new RequiredField() with { Type = true };
-        requiredFields[type] = requiredField;
+        {
+            requiredFieldDict = new Dictionary<int, RequiredField>() { { serviceDefinitionNumber, new RequiredField() with { Type = true } } };
+        }
+        requiredFields[type] = requiredFieldDict;
     }
-    private static void AddFactoryField(IDictionary<TypeDescriptor, RequiredField> requiredFields, ServiceDescriptor service)
+    private static void AddFactoryField(IDictionary<TypeDescriptor, IDictionary<int, RequiredField>> requiredFields, ServiceDescriptor service, int serviceDefinitionNumber)
     {
-        var type = service.ServiceType;
-        if (requiredFields.TryGetValue(type, out RequiredField requiredField))
-            requiredField = requiredField with { Factory = true };
+        if (requiredFields.TryGetValue(service.ServiceType, out IDictionary<int, RequiredField>? requiredFieldDict))
+        {
+            if (requiredFieldDict.TryGetValue(serviceDefinitionNumber, out RequiredField requiredField))
+            {
+                requiredField = requiredField with { Factory = true };
+            }
+            else
+            {
+                requiredField = new RequiredField() with { Factory = true };
+            }
+            requiredFieldDict[serviceDefinitionNumber] = requiredField;
+        }
         else
-            requiredField = new RequiredField() with { Factory = true };
-        requiredFields[type] = requiredField;
+        {
+            requiredFieldDict = new Dictionary<int, RequiredField>() { { serviceDefinitionNumber, new RequiredField() with { Factory = true } } };
+        }
+        requiredFields[service.ServiceType] = requiredFieldDict;
     }
-    private static void AddCtorField(IDictionary<TypeDescriptor, RequiredField> requiredFields, TypeDescriptor type)
+    private static void AddCtorField(IDictionary<TypeDescriptor, IDictionary<int, RequiredField>> requiredFields, TypeDescriptor type, int serviceDefinitionNumber)
     {
-        if (requiredFields.TryGetValue(type, out RequiredField requiredField))
-            requiredField = requiredField with { Type = true, Ctor = true };
+        if (requiredFields.TryGetValue(type, out IDictionary<int, RequiredField>? requiredFieldDict))
+        {
+            if (requiredFieldDict.TryGetValue(serviceDefinitionNumber, out RequiredField requiredField))
+            {
+                requiredField = requiredField with { Type = true, Ctor = true };
+            }
+            else
+            {
+                requiredField = new RequiredField() with { Type = true, Ctor = true };
+            }
+            requiredFieldDict[serviceDefinitionNumber] = requiredField;
+        }
         else
-            requiredField = new RequiredField() with { Type = true, Ctor = true };
-        requiredFields[type] = requiredField;
+        {
+            requiredFieldDict = new Dictionary<int, RequiredField>() { { serviceDefinitionNumber, new RequiredField() with { Type = true, Ctor = true } } };
+        }
+        requiredFields[type] = requiredFieldDict;
     }
-    private static void AddPropField(IDictionary<TypeDescriptor, RequiredField> requiredFields, TypeDescriptor type, string propName, ServiceDescriptor service)
+    private static void AddPropField(IDictionary<TypeDescriptor, IDictionary<int, RequiredField>> requiredFields, TypeDescriptor type, string propName, ServiceDescriptor service, int serviceDefinitionNumber)
     {
-        if (requiredFields.TryGetValue(type, out RequiredField requiredField))
-            requiredField = requiredField with { Type = true, Ctor = true };
+        if (requiredFields.TryGetValue(type, out IDictionary<int, RequiredField>? requiredFieldDict))
+        {
+            if (requiredFieldDict.TryGetValue(serviceDefinitionNumber, out RequiredField requiredField))
+            {
+                requiredField = requiredField with { Type = true, Ctor = true };
+            }
+            else
+            {
+                requiredField = new RequiredField() with { Type = true, Ctor = true };
+            }
+            var props = requiredField.Props;
+            if (props.FirstIndexOf(item => item.propName == propName) is int currentIndex and > -1)
+                props.RemoveAt(currentIndex);
+            props.Add((propName, service));
+            requiredFieldDict[serviceDefinitionNumber] = requiredField;
+        }
         else
-            requiredField = new RequiredField() with { Type = true, Ctor = true };
-        var props = requiredField.Props;
-        if (props.FirstIndexOf(item => item.propName == propName) is int currentIndex && currentIndex > -1)
-            props.RemoveAt(currentIndex);
-        props.Add((propName, service));
-        requiredFields[type] = requiredField;
+        {
+            var requiredField = new RequiredField() with { Type = true, Ctor = true };
+            var props = requiredField.Props;
+            if (props.FirstIndexOf(item => item.propName == propName) is int currentIndex and > -1)
+                props.RemoveAt(currentIndex);
+            props.Add((propName, service));
+            requiredFieldDict = new Dictionary<int, RequiredField>() { { serviceDefinitionNumber, requiredField } };
+        }
+        requiredFields[type] = requiredFieldDict;
     }
     #endregion
 
-    private static string GenerateGet(TypeDescriptor typeDescriptor, IEnumerable<ServiceDescriptor> allServices, IDictionary<TypeDescriptor, RequiredField> requiredFields)
+    private static string GenerateGet(TypeDescriptor typeDescriptor, int serviceDefinitionNumber, IEnumerable<ServiceDescriptor> allServices, IDictionary<TypeDescriptor, IDictionary<int, RequiredField>> requiredFields)
     {
         StringBuilder builder = new();
         if (typeDescriptor.CollectionTypeArg is TypeDescriptor collectionTypeArg)
@@ -79,7 +130,7 @@ internal static class GeneratorHelper
                     .Append("[")
                     .Append(servicesCount)
                     .Append("] { ")
-                    .Append(string.Join(", ", applicableServices.Select(service => GenerateGet(service.ServiceType, allServices, requiredFields))))
+                    .Append(string.Join(", ", applicableServices.Select(service => GenerateGet(service.ServiceType, serviceDefinitionNumber, allServices, requiredFields))))
                     .Append(" }");
             }
             else
@@ -92,11 +143,11 @@ internal static class GeneratorHelper
         }
         else if (typeDescriptor.TendsToExternalNonPublic)
         {
-            AddTypeField(requiredFields, typeDescriptor);
+            AddTypeField(requiredFields, typeDescriptor, serviceDefinitionNumber);
             builder
                 .Append("resolver.GetService(")
                 .Append("type_")
-                .Append(typeDescriptor.Name.VarNameForm())
+                .Append(typeDescriptor.Name.VarNameForm(serviceDefinitionNumber))
                 .Append(')');
         }
         else
@@ -108,9 +159,13 @@ internal static class GeneratorHelper
         }
         return builder.ToString();
     }
-    private static string GenerateTypeCtorCall(TypeDescriptor typeDescriptor, TypeDescriptor serviceType, IEnumerable<ServiceDescriptor> allServices, IDictionary<TypeDescriptor, RequiredField> requiredFields, out bool multiline)
+    private static string GenerateTypeCtorCall(TypeDescriptor typeDescriptor, TypeDescriptor serviceType, int serviceDefinitionNumber, IEnumerable<ServiceDescriptor> allServices, IDictionary<TypeDescriptor, IDictionary<int, RequiredField>> requiredFields, out bool multiline)
     {
         //new T(resolver.Get<TDependency1>(), resolver.Get<TDependency2>()) { InjectedProperty1 = resolver.Get<InjectedProperty1ServiceType>() }
+        if (typeDescriptor.Name.Contains("GenericWebHostServiceOptions"))
+        {
+
+        }
 
         var ctorParamTypes = DependencyHelper.FindBestCtors(typeDescriptor, allServices).First();
         var injectedProperties = DependencyHelper.GetInjectedProperties(typeDescriptor, allServices);
@@ -120,12 +175,12 @@ internal static class GeneratorHelper
         StringBuilder builder = new();
         if (typeDescriptor.TendsToExternalNonPublic || typeDescriptor.IsNonClosedGenericType)
         {
-            AddCtorField(requiredFields, typeDescriptor);
+            AddCtorField(requiredFields, typeDescriptor, serviceDefinitionNumber);
             if (hasInjectedProps)
             {
                 builder
                     .Append("var instance_")
-                    .Append(typeDescriptor.Name.VarNameForm())
+                    .Append(typeDescriptor.Name.VarNameForm(serviceDefinitionNumber))
                     .Append(" = ");
             }
             if (!serviceType.TendsToExternalNonPublic && !serviceType.IsNonClosedGenericType)
@@ -137,7 +192,7 @@ internal static class GeneratorHelper
             }
             builder
                 .Append(typeDescriptor.IsNonClosedGenericType ? "constructedTypeCtor_" : "typeCtor_")
-                .Append(typeDescriptor.Name.VarNameForm())
+                .Append(typeDescriptor.Name.VarNameForm(serviceDefinitionNumber))
                 .Append(".Invoke(");
             if (typeDescriptor.IsNonClosedGenericType)
             {
@@ -179,7 +234,7 @@ internal static class GeneratorHelper
                 }
                 else
                 {
-                    builder.Append(GenerateGet(paramType, allServices, requiredFields));
+                    builder.Append(GenerateGet(paramType, serviceDefinitionNumber, allServices, requiredFields));
                 }
             }
             if (ctorParamTypes.Any() && (typeDescriptor.TendsToExternalNonPublic || typeDescriptor.IsNonClosedGenericType))
@@ -195,18 +250,18 @@ internal static class GeneratorHelper
                 builder.Append(';');
                 foreach (var (propName, service) in injectedProperties)
                 {
-                    AddPropField(requiredFields, typeDescriptor, propName, service);
+                    AddPropField(requiredFields, typeDescriptor, propName, service, service.DefinitionNumber);
                     builder
                         .AppendLine()
                         .Append(typeDescriptor.IsNonClosedGenericType ? "constructedProp_" : "prop_")
                         .Append(propName)
                         .Append("_")
-                        .Append(service.ServiceType.Name.VarNameForm())
+                        .Append(service.ServiceType.Name.VarNameForm(service.DefinitionNumber))
                         .Append(".SetValue(")
                         .Append("instance_")
-                        .Append(service.ServiceType.Name.VarNameForm())
+                        .Append(service.ServiceType.Name.VarNameForm(service.DefinitionNumber))
                         .Append(", ")
-                        .Append(GenerateGet(service.ServiceType, allServices, requiredFields))
+                        .Append(GenerateGet(service.ServiceType, service.DefinitionNumber, allServices, requiredFields))
                         .Append(");");
                 }
             }
@@ -214,16 +269,16 @@ internal static class GeneratorHelper
             {
                 builder
                     .Append(" { ")
-                    .Append(string.Join(", ", injectedProperties.Select(prop => $"{prop.propName} = {GenerateGet(prop.service.ServiceType, allServices, requiredFields)}")))
+                    .Append(string.Join(", ", injectedProperties.Select(prop => $"{prop.propName} = {GenerateGet(prop.service.ServiceType, prop.service.DefinitionNumber, allServices, requiredFields)}")))
                     .Append(" }");
             }
         }
         return builder.ToString();
     }
 
-    private static string GenerateImplSelector(TypeDescriptor serviceType, IEnumerable<TypeDescriptor> serviceImpls, IEnumerable<ServiceDescriptor> allServices, IDictionary<TypeDescriptor, RequiredField> requiredFields)
+    private static string GenerateImplSelector(TypeDescriptor serviceType, int serviceDefinitionNumber, IEnumerable<TypeDescriptor> serviceImpls, IEnumerable<ServiceDescriptor> allServices, IDictionary<TypeDescriptor, IDictionary<int, RequiredField>> requiredFields)
     {
-        StringBuilder builder = new("Type implType = implSelector();");
+        StringBuilder builder = new("global::System.Type implType = implSelector();");
         foreach (var serviceImp in serviceImpls)
         {
             builder.AppendLine();
@@ -237,7 +292,7 @@ internal static class GeneratorHelper
                 //we can safely discard the multiline out param of GenerateTypeCtorCall
                 // because implSelectors cannot return external non-public types
                 // and therefore GenerateTypeCtorCall will never set multiline to true
-                returned = GenerateTypeCtorCall(serviceImp, serviceType, allServices, requiredFields, out _);
+                returned = GenerateTypeCtorCall(serviceImp, serviceType, serviceDefinitionNumber, allServices, requiredFields, out _);
             }
             builder.Append($@"if (typeof({serviceImp.Name}) == implType) return {returned};");
         }
@@ -247,7 +302,7 @@ internal static class GeneratorHelper
         return builder.ToString();
     }
 
-    private static string GenerateDictate(ServiceDescriptor serviceDescriptor, IEnumerable<ServiceDescriptor> allServices, IDictionary<TypeDescriptor, RequiredField> requiredFields)
+    private static string GenerateDictate(ServiceDescriptor serviceDescriptor, IEnumerable<ServiceDescriptor> allServices, IDictionary<TypeDescriptor, IDictionary<int, RequiredField>> requiredFields)
     {
         //this way may seem a bit more cleaner but it's a lot of hassle to write and not worthy of time for version
         //SyntaxFactory.ExpressionStatement(
@@ -257,18 +312,22 @@ internal static class GeneratorHelper
         //        SyntaxFactory.IdentifierName("Add")))
         //    .WithArgumentList(SyntaxFactory.ArgumentList(new SeparatedSyntaxList<ArgumentSyntax>().));
         StringBuilder builder = new();
+        string serviceTypeName = serviceDescriptor.ServiceType.Name;
+        if (serviceDescriptor.DefinitionNumber > 0)
+            serviceTypeName += serviceDescriptor.DefinitionNumber.ToString();
+        string serviceTypeNameVarForm = serviceTypeName.VarNameForm();
         if (serviceDescriptor.ServiceType.IsNonClosedGenericType)
         {
-            AddTypeField(requiredFields, serviceDescriptor.ServiceType);
+            AddTypeField(requiredFields, serviceDescriptor.ServiceType, serviceDescriptor.DefinitionNumber);
             builder
                 .Append("privateTypes[\"")
-                .Append(serviceDescriptor.ServiceType.Name)
+                .Append(serviceTypeName)
                 .Append("\"] = ")
                 .Append("privateType_")
-                .Append(serviceDescriptor.ServiceType.Name.VarNameForm())
+                .Append(serviceTypeNameVarForm)
                 .Append(" = ")
                 .Append("privateType_")
-                .Append(serviceDescriptor.ServiceType.Name.VarNameForm())
+                .Append(serviceTypeNameVarForm)
                 .Append($".WithInitialization({Consts.global}{Consts.mainNs}.ThunderboltServiceLifetime.")
                 .Append(serviceDescriptor.Lifetime switch { 0 => Consts.Singleton, 1 => Consts.Scoped, 2 => Consts.Transient, _ => "" })
                 .Append(", typeArgs => ")
@@ -280,10 +339,10 @@ internal static class GeneratorHelper
             builder.Append("reg.Dictate");
             if (serviceDescriptor.ServiceType.TendsToExternalNonPublic)
             {
-                AddTypeField(requiredFields, serviceDescriptor.ServiceType);
+                AddTypeField(requiredFields, serviceDescriptor.ServiceType, serviceDescriptor.DefinitionNumber);
                 builder
                     .Append("(type_")
-                    .Append(serviceDescriptor.ServiceType.Name.VarNameForm())
+                    .Append(serviceTypeNameVarForm)
                     .Append(", ");
             }
             else
@@ -297,11 +356,12 @@ internal static class GeneratorHelper
                     .Append(", ")
                     .Append(Consts.serviceLifetimeEnumFullName)
                     .Append('.')
-                    .Append(serviceDescriptor.Lifetime switch { 0 => Consts.Singleton, 1 => Consts.Scoped, 2 => Consts.Transient, _ => "" })
-                    .Append(", null, "); //there can't be implSelector because AttributeRegisters needs const expr and therefore no lambdas, and MS DI don't have this feature
+                    .Append(serviceDescriptor.Lifetime switch { 0 => Consts.Singleton, 1 => Consts.Scoped, 2 => Consts.Transient, _ => "" });
+                builder.Append(", null, "); //there can't be implSelector because AttributeRegisters needs const expr and therefore no lambdas, and MS DI don't have this feature
+
                 if (serviceDescriptor.HasFactory)
                 {
-                    AddFactoryField(requiredFields, serviceDescriptor);
+                    AddFactoryField(requiredFields, serviceDescriptor, serviceDescriptor.DefinitionNumber);
                     builder
                         .Append("resolver => ");
                     if (!serviceDescriptor.ServiceType.TendsToExternalNonPublic && !serviceDescriptor.ServiceType.IsNonClosedGenericType)
@@ -313,7 +373,7 @@ internal static class GeneratorHelper
                     }
                     builder
                         .Append("typeFactory_")
-                        .Append(serviceDescriptor.ServiceType.Name.VarNameForm())
+                        .Append(serviceTypeNameVarForm)
                         .Append($"(resolver)");
                 }
                 else
@@ -326,8 +386,12 @@ internal static class GeneratorHelper
         return builder.ToString();
     }
 
-    private static string GenerateDictateValue(ServiceDescriptor serviceDescriptor, IEnumerable<ServiceDescriptor> allServices, TypeDescriptor? impl, IDictionary<TypeDescriptor, RequiredField> requiredFields)
+    private static string GenerateDictateValue(ServiceDescriptor serviceDescriptor, IEnumerable<ServiceDescriptor> allServices, TypeDescriptor? impl, IDictionary<TypeDescriptor, IDictionary<int, RequiredField>> requiredFields)
     {
+        if (serviceDescriptor.ServiceType.Name.Contains("GenericWebHostServiceOptions"))
+        {
+
+        }
         if (serviceDescriptor.HasFactory)
         {
             return "userFactory!(resolver)";
@@ -337,29 +401,25 @@ internal static class GeneratorHelper
             return
 $@"
 {{
-{GenerateImplSelector(serviceDescriptor.ServiceType, serviceDescriptor.ImplSelectorTypes, allServices, requiredFields).AddIndentation(1)}
+{GenerateImplSelector(serviceDescriptor.ServiceType, serviceDescriptor.DefinitionNumber, serviceDescriptor.ImplSelectorTypes, allServices, requiredFields).AddIndentation(1)}
 }}";
         }
         if (serviceDescriptor.ImplType is not null)
         {
-            if (impl is null)
-            {
-                impl = serviceDescriptor.ImplType;
-            }
+            impl ??= serviceDescriptor.ImplType;
+
             if (serviceDescriptor.ServiceType != impl && allServices.TryFind(service => impl.MatchesService(service), out ServiceDescriptor implServiceDescriptor))
             {
                 return GenerateDictateValue(implServiceDescriptor, allServices, impl, requiredFields);
             }
         }
-        if (impl is null)
-        {
-            impl = serviceDescriptor.ServiceType;
-        }
 
-        string ctorCall = $@"{GenerateTypeCtorCall(impl, serviceDescriptor.ServiceType, allServices, requiredFields, out bool multiline)}";
+        impl ??= serviceDescriptor.ServiceType;
+
+        string ctorCall = $@"{GenerateTypeCtorCall(impl, serviceDescriptor.ServiceType, serviceDescriptor.DefinitionNumber, allServices, requiredFields, out bool multiline)}";
         if (serviceDescriptor.ServiceType.IsNonClosedGenericType)
         {
-            AddTypeField(requiredFields, serviceDescriptor.ServiceType);
+            AddTypeField(requiredFields, serviceDescriptor.ServiceType, serviceDescriptor.DefinitionNumber);
             var builder
                 = new StringBuilder("var constructedType_")
                 .Append(impl.Name.VarNameForm())
@@ -402,7 +462,7 @@ $@"
                     .Append("var constructedProp_")
                     .Append(propName)
                     .Append('_')
-                    .Append(propService.ServiceType.Name.VarNameForm())
+                    .Append(propService.ServiceType.Name.VarNameForm(propService.DefinitionNumber))
                     .Append(" = constructedType_")
                     .Append(impl.Name.VarNameForm())
                     .Append(".GetProperty(\"")
@@ -448,12 +508,12 @@ $@"
             return ctorCall;
         }
     }
-    private static string GenerateDictates(IEnumerable<ServiceDescriptor> allTypes, IEnumerable<ServiceDescriptor> allServices, IDictionary<TypeDescriptor, RequiredField> requiredFields)
+    private static string GenerateDictates(IEnumerable<ServiceDescriptor> allTypes, IEnumerable<ServiceDescriptor> allServices, IDictionary<TypeDescriptor, IDictionary<int, RequiredField>> requiredFields)
     {
         return string.Join(Environment.NewLine, allTypes.Select(item => GenerateDictate(item, allServices, requiredFields)));
     }
 
-    //private static string GenerateStaticRegistrations(IEnumerable<ServiceDescriptor> services, IDictionary<TypeDescriptor, RequiredField> requiredFields)
+    //private static string GenerateStaticRegistrations(IEnumerable<ServiceDescriptor> services, IDictionary<TypeDescriptor, IDictionary<int, RequiredField>> requiredFields)
     //{
     //    StringBuilder builder = new();
     //    bool isFirst = true;
@@ -519,19 +579,19 @@ $@"
     //    return builder.ToString();
     //}
 
-    internal static string GenerateDictateTypeFactories(IEnumerable<ServiceDescriptor> allTypes, IEnumerable<ServiceDescriptor> allServices, IDictionary<TypeDescriptor, RequiredField> requiredFields)
+    internal static string GenerateDictateTypeFactories(IEnumerable<ServiceDescriptor> allTypes, IEnumerable<ServiceDescriptor> allServices, IDictionary<TypeDescriptor, IDictionary<int, RequiredField>> requiredFields)
     {
         return !allTypes.Any() ? "" : GenerateDictates(allTypes, allServices, requiredFields);
     }
 
-    //internal static string GenerateStaticRegister(IEnumerable<(ServiceDescriptor service, INamedTypeSymbol? symbol)> allTypes, IDictionary<TypeDescriptor, RequiredField> requiredFields)
+    //internal static string GenerateStaticRegister(IEnumerable<(ServiceDescriptor service, INamedTypeSymbol? symbol)> allTypes, IDictionary<TypeDescriptor, IDictionary<int, RequiredField>> requiredFields)
     //{
     //    return !allTypes.Any(item => item.symbol is null) ? "" : GenerateStaticRegistrations(allTypes.Where(item => item.symbol is null && !item.service.ServiceType.IsNonClosedGenericType).Select(item => item.service), requiredFields);
     //}
 
-    internal static string GenerateRequiredFields(IEnumerable<ServiceDescriptor> allServices, IDictionary<TypeDescriptor, RequiredField> requiredFields)
+    internal static string GenerateRequiredFields(IEnumerable<ServiceDescriptor> allServices, IDictionary<TypeDescriptor, IDictionary<int, RequiredField>> requiredFields)
     {
-        Dictionary<TypeDescriptor, RequiredField> additionalFields = new Dictionary<TypeDescriptor, RequiredField>();
+        Dictionary<TypeDescriptor, IDictionary<int, RequiredField>> additionalFields = new();
         var (reqTypes, reqFields) = processFields(requiredFields, additionalFields);
         var (addTypes, addFields) = processFields(additionalFields, null);
         string joined =
@@ -576,30 +636,27 @@ $@"static global::System.Type constructType(in global::System.Type type, in glob
             joined = builder.ToString();
         }
         return joined;
-        (string types, string fields) processFields(IDictionary<TypeDescriptor, RequiredField> requiredFields, IDictionary<TypeDescriptor, RequiredField>? additionalFields)
+        (string types, string fields) processFields(IDictionary<TypeDescriptor, IDictionary<int, RequiredField>> requiredFields, IDictionary<TypeDescriptor, IDictionary<int, RequiredField>>? additionalFields)
         {
             StringBuilder builder = new();
             StringBuilder typesBuilder = new();
-            foreach (var item in requiredFields)
+            foreach (var (type, definitionNumber, requiredField) in requiredFields.SelectMany(rf => rf.Value.Select(kvp => (rf.Key, kvp.Key, kvp.Value))))
             {
-                var type = item.Key;
-                var requiredField = item.Value;
-
                 #region types
                 typesBuilder
                     .Append("var privateType_")
-                    .Append(type.Name.VarNameForm())
+                    .Append(type.Name.VarNameForm(definitionNumber))
                     .Append(" = privateTypes[\"")
-                    .Append(type.Name)
+                    .Append(type.Name.DefinitionNumberSuffix(definitionNumber))
                     .Append("\"];");
                 if (requiredField.Factory)
                 {
                     typesBuilder
                         .AppendLine()
                         .Append("var typeFactory_")
-                        .Append(type.Name.VarNameForm())
+                        .Append(type.Name.VarNameForm(definitionNumber))
                         .Append(" = privateType_")
-                        .Append(type.Name.VarNameForm())
+                        .Append(type.Name.VarNameForm(definitionNumber))
                         .Append(".factory!;");
                 }
                 if (requiredField.Type || requiredField.Ctor || requiredField.Props.Count > 0)
@@ -607,9 +664,9 @@ $@"static global::System.Type constructType(in global::System.Type type, in glob
                     typesBuilder
                         .AppendLine()
                         .Append("var type_")
-                        .Append(type.Name.VarNameForm())
+                        .Append(type.Name.VarNameForm(definitionNumber))
                         .Append(" = privateType_")
-                        .Append(type.Name.VarNameForm())
+                        .Append(type.Name.VarNameForm(definitionNumber))
                         .Append(".type;");
                 }
                 typesBuilder.AppendLine();
@@ -623,21 +680,35 @@ $@"static global::System.Type constructType(in global::System.Type type, in glob
                     {
                         foreach (var ctorParamType in ctorParamTypes.Where(ctorParamType => ctorParamType.IsNonClosedGenericType && !requiredFields.Any(r => r.Key == ctorParamType)))
                         {
-                            additionalFields[ctorParamType] = new RequiredField() with { Type = true };
+                            if (additionalFields.TryGetValue(ctorParamType, out var additionalField))
+                            {
+                                additionalField[definitionNumber] = new RequiredField() with { Type = true };
+                            }
+                            else
+                            {
+                                additionalFields[ctorParamType] = new Dictionary<int, RequiredField>() { { definitionNumber, new RequiredField() with { Type = true } } };
+                            }
                         }
                         if (allServices.TryFind(service => service.ServiceType == type, out var service))
                         {
                             foreach (var serviceImpl in service.GetPossibleImplementations(allServices).Where(serviceImpl => serviceImpl.IsNonClosedGenericType && !requiredFields.Any(r => r.Key == serviceImpl)))
                             {
-                                additionalFields[serviceImpl] = new RequiredField() with { Type = true };
+                                if (additionalFields.TryGetValue(serviceImpl, out var additionalField))
+                                {
+                                    additionalField[definitionNumber] = new RequiredField() with { Type = true };
+                                }
+                                else
+                                {
+                                    additionalFields[serviceImpl] = new Dictionary<int, RequiredField>() { { definitionNumber, new RequiredField() with { Type = true } } };
+                                }
                             }
                         }
                     }
                     builder
                       .Append("global::System.Reflection.ConstructorInfo typeCtor_")
-                      .Append(type.Name.VarNameForm())
+                      .Append(type.Name.VarNameForm(definitionNumber))
                       .Append(" = type_")
-                      .Append(type.Name.VarNameForm())
+                      .Append(type.Name.VarNameForm(definitionNumber))
                       .Append(".GetConstructor(");
                     if (ctorParamTypes.Count() is int paramsCount && paramsCount > 0)
                     {
@@ -645,7 +716,7 @@ $@"static global::System.Type constructType(in global::System.Type type, in glob
                           .Append("new global::System.Type[")
                           .Append(paramsCount)
                           .Append("] { ")
-                          .Append(string.Join(", ", ctorParamTypes.Select(paramType => paramType.TendsToExternalNonPublic || paramType.IsNonClosedGenericType ? $"type_{paramType.Name.VarNameForm()}" : $"typeof({paramType.Name})")))
+                          .Append(string.Join(", ", ctorParamTypes.Select(paramType => paramType.TendsToExternalNonPublic || paramType.IsNonClosedGenericType ? $"type_{paramType.Name.VarNameForm(definitionNumber)}" : $"typeof({paramType.Name})")))
                           .Append(" })!;");
                     }
                     else
@@ -665,15 +736,15 @@ $@"static global::System.Type constructType(in global::System.Type type, in glob
                         .Append("global::System.Reflection.PropertyInfo prop_")
                         .Append(propName)
                         .Append('_')
-                        .Append(propService.ServiceType.Name.VarNameForm())
+                        .Append(propService.ServiceType.Name.VarNameForm(propService.DefinitionNumber))
                         .Append(" = type_")
-                        .Append(type.Name.VarNameForm())
+                        .Append(type.Name.VarNameForm(definitionNumber))
                         .Append(".GetProperty(\"")
                         .Append(propName)
                         .Append("\")!;")
                         .AppendLine();
                 }
-                #endregion}
+                #endregion
             }
             return (typesBuilder.ToString(), builder.ToString());
         }

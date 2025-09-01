@@ -12,4 +12,271 @@
 		<CompilerVisibleProperty Include="UsingMicrosoftNetSdkWeb" />
 		<CompilerVisibleProperty Include="EnablePreviewFeatures" />
 	</ItemGroup>
+	<UsingTask TaskName="EnumeratePropertiesAsJson" TaskFactory="RoslynCodeTaskFactory" AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.Core.dll">
+		<ParameterGroup>
+			<JsonFilePath ParameterType="System.String" Required="true" />
+			<ProjectFile ParameterType="System.String" Required="true" />
+		</ParameterGroup>
+		<Task>
+			<Reference Include="$(MSBuildToolsPath)\Microsoft.Build.dll" />
+			<Reference Include="$(MSBuildToolsPath)\Microsoft.Build.Framework.dll" />
+			<Reference Include="$(MSBuildToolsPath)\Microsoft.Build.Utilities.Core.dll" />
+			<Reference Include="netstandard" />
+			<Using Namespace="System.IO" />
+			<Using Namespace="System.Text" />
+			<Using Namespace="System.Collections.Generic" />
+			<Using Namespace="System.Linq" />
+			<Using Namespace="System.Reflection" />
+			<Using Namespace="Microsoft.Build.Framework" />
+			<Using Namespace="Microsoft.Build.Utilities" />
+			<Code Type="Fragment" Language="cs">
+				<![CDATA[
+      Log.LogMessage(MessageImportance.Normal, "=== GENERATING PROPERTIES JSON ===");
+      
+      try
+      {
+          var msbuildAssembly = Assembly.LoadFrom(Path.Combine(Path.GetDirectoryName(typeof(ITaskItem).Assembly.Location), "Microsoft.Build.dll"));
+          var projectCollectionType = msbuildAssembly.GetType("Microsoft.Build.Evaluation.ProjectCollection");
+          var globalCollectionProperty = projectCollectionType.GetProperty("GlobalProjectCollection", BindingFlags.Public | BindingFlags.Static);
+          var globalCollection = globalCollectionProperty.GetValue(null);
+          var getLoadedProjectsMethod = projectCollectionType.GetMethod("GetLoadedProjects", new[] { typeof(string) });
+          var loadedProjects = (System.Collections.IEnumerable)getLoadedProjectsMethod.Invoke(globalCollection, new object[] { ProjectFile });
+          
+          object project = null;
+          foreach (var p in loadedProjects)
+          {
+              project = p;
+              break;
+          }
+          
+          if (project == null)
+          {
+              var newCollection = Activator.CreateInstance(projectCollectionType);
+              var loadProjectMethod = projectCollectionType.GetMethod("LoadProject", new[] { typeof(string) });
+              project = loadProjectMethod.Invoke(newCollection, new object[] { ProjectFile });
+          }
+          
+          if (project != null)
+          {
+              var projectType = project.GetType();
+              var allPropsProperty = projectType.GetProperty("AllEvaluatedProperties");
+              var allEvaluatedProperties = (System.Collections.IEnumerable)allPropsProperty.GetValue(project);
+              
+              var jsonBuilder = new StringBuilder();
+              jsonBuilder.AppendLine("{");
+              jsonBuilder.AppendLine("  \"timestamp\": \"" + DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ss.fffZ") + "\",");
+              jsonBuilder.AppendLine("  \"projectFile\": \"" + ProjectFile.Replace("\\", "\\\\").Replace("\"", "\\\"") + "\",");
+              jsonBuilder.AppendLine("  \"properties\": {");
+              
+              var properties = new List<string>();
+              foreach (var prop in allEvaluatedProperties)
+              {
+                  var propType = prop.GetType();
+                  var nameProperty = propType.GetProperty("Name");
+                  var valueProperty = propType.GetProperty("EvaluatedValue");
+                  
+                  if (nameProperty != null && valueProperty != null)
+                  {
+                      var name = nameProperty.GetValue(prop) as string;
+                      var value = valueProperty.GetValue(prop) as string ?? "";
+                      
+                      if (!string.IsNullOrWhiteSpace(name))
+                      {
+                          // Escape JSON strings
+                          var escapedName = name.Replace("\\", "\\\\").Replace("\"", "\\\"").Replace("\r", "\\r").Replace("\n", "\\n").Replace("\t", "\\t");
+                          var escapedValue = value.Replace("\\", "\\\\").Replace("\"", "\\\"").Replace("\r", "\\r").Replace("\n", "\\n").Replace("\t", "\\t");
+                          properties.Add($"    \"{escapedName}\": \"{escapedValue}\"");
+                      }
+                  }
+              }
+              
+              jsonBuilder.AppendLine(string.Join(",\n", properties));
+              jsonBuilder.AppendLine("  }");
+              jsonBuilder.AppendLine("}");
+              
+              var jsonDir = Path.GetDirectoryName(JsonFilePath);
+              if (!Directory.Exists(jsonDir))
+              {
+                  Directory.CreateDirectory(jsonDir);
+              }
+              
+              File.WriteAllText(JsonFilePath, jsonBuilder.ToString(), System.Text.Encoding.UTF8);
+              Log.LogMessage(MessageImportance.Normal, $"Properties JSON written to: {JsonFilePath}");
+          }
+      }
+      catch (Exception ex)
+      {
+          Log.LogError($"Error generating properties JSON: {ex.Message}");
+      }
+      ]]>
+			</Code>
+		</Task>
+	</UsingTask>
+
+	<UsingTask TaskName="EnumerateReferencesAsJson" TaskFactory="RoslynCodeTaskFactory" AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.Core.dll">
+		<ParameterGroup>
+			<JsonFilePath ParameterType="System.String" Required="true" />
+			<ProjectFile ParameterType="System.String" Required="true" />
+		</ParameterGroup>
+		<Task>
+			<Reference Include="$(MSBuildToolsPath)\Microsoft.Build.dll" />
+			<Reference Include="$(MSBuildToolsPath)\Microsoft.Build.Framework.dll" />
+			<Reference Include="$(MSBuildToolsPath)\Microsoft.Build.Utilities.Core.dll" />
+			<Reference Include="netstandard" />
+			<Using Namespace="System.IO" />
+			<Using Namespace="System.Text" />
+			<Using Namespace="System.Collections.Generic" />
+			<Using Namespace="System.Linq" />
+			<Using Namespace="System.Reflection" />
+			<Using Namespace="Microsoft.Build.Framework" />
+			<Using Namespace="Microsoft.Build.Utilities" />
+			<Code Type="Fragment" Language="cs">
+				<![CDATA[
+      Log.LogMessage(MessageImportance.Normal, "=== GENERATING REFERENCES JSON ===");
+      
+      try
+      {
+          var msbuildAssembly = Assembly.LoadFrom(Path.Combine(Path.GetDirectoryName(typeof(ITaskItem).Assembly.Location), "Microsoft.Build.dll"));
+          var projectCollectionType = msbuildAssembly.GetType("Microsoft.Build.Evaluation.ProjectCollection");
+          var globalCollectionProperty = projectCollectionType.GetProperty("GlobalProjectCollection", BindingFlags.Public | BindingFlags.Static);
+          var globalCollection = globalCollectionProperty.GetValue(null);
+          var getLoadedProjectsMethod = projectCollectionType.GetMethod("GetLoadedProjects", new[] { typeof(string) });
+          var loadedProjects = (System.Collections.IEnumerable)getLoadedProjectsMethod.Invoke(globalCollection, new object[] { ProjectFile });
+          
+          object project = null;
+          foreach (var p in loadedProjects)
+          {
+              project = p;
+              break;
+          }
+          
+          if (project == null)
+          {
+              var newCollection = Activator.CreateInstance(projectCollectionType);
+              var loadProjectMethod = projectCollectionType.GetMethod("LoadProject", new[] { typeof(string) });
+              project = loadProjectMethod.Invoke(newCollection, new object[] { ProjectFile });
+          }
+          
+          if (project != null)
+          {
+              var projectType = project.GetType();
+              var allItemsProperty = projectType.GetProperty("AllEvaluatedItems");
+              var allEvaluatedItems = (System.Collections.IEnumerable)allItemsProperty.GetValue(project);
+              
+              var jsonBuilder = new StringBuilder();
+              jsonBuilder.AppendLine("{");
+              jsonBuilder.AppendLine("  \"timestamp\": \"" + DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ss.fffZ") + "\",");
+              jsonBuilder.AppendLine("  \"projectFile\": \"" + ProjectFile.Replace("\\", "\\\\").Replace("\"", "\\\"") + "\",");
+              jsonBuilder.AppendLine("  \"references\": [");
+              
+              var references = new List<string>();
+              
+              foreach (var item in allEvaluatedItems)
+              {
+                  var itemType = item.GetType();
+                  var itemTypeProperty = itemType.GetProperty("ItemType");
+                  var includeProperty = itemType.GetProperty("EvaluatedInclude");
+                  var metadataProperty = itemType.GetProperty("Metadata");
+                  
+                  if (itemTypeProperty != null && includeProperty != null)
+                  {
+                      var itemTypeName = itemTypeProperty.GetValue(item) as string;
+                      var includePath = includeProperty.GetValue(item) as string;
+                      
+                      if (!string.IsNullOrWhiteSpace(itemTypeName) && 
+                          (itemTypeName.Contains("Reference") || 
+                           itemTypeName.Contains("Analyzer") ||
+                           itemTypeName.Equals("Reference") ||
+                           itemTypeName.Equals("PackageReference") ||
+                           itemTypeName.Equals("ProjectReference") ||
+                           itemTypeName.Equals("FrameworkReference")))
+                      {
+                          var refBuilder = new StringBuilder();
+                          refBuilder.AppendLine("    {");
+                          
+                          var escapedInclude = (includePath ?? "").Replace("\\", "\\\\").Replace("\"", "\\\"").Replace("\r", "\\r").Replace("\n", "\\n").Replace("\t", "\\t");
+                          var escapedItemType = itemTypeName.Replace("\\", "\\\\").Replace("\"", "\\\"").Replace("\r", "\\r").Replace("\n", "\\n").Replace("\t", "\\t");
+                          
+                          refBuilder.AppendLine($"      \"include\": \"{escapedInclude}\",");
+                          refBuilder.AppendLine($"      \"itemType\": \"{escapedItemType}\",");
+                          refBuilder.AppendLine("      \"metadata\": {");
+                          
+                          var metadataItems = new List<string>();
+                          if (metadataProperty != null)
+                          {
+                              var metadata = (System.Collections.IEnumerable)metadataProperty.GetValue(item);
+                              foreach (var meta in metadata)
+                              {
+                                  var metaType = meta.GetType();
+                                  var nameProperty = metaType.GetProperty("Name");
+                                  var valueProperty = metaType.GetProperty("EvaluatedValue");
+                                  
+                                  if (nameProperty != null && valueProperty != null)
+                                  {
+                                      var metaName = nameProperty.GetValue(meta) as string;
+                                      var metaValue = valueProperty.GetValue(meta) as string ?? "";
+                                      
+                                      if (!string.IsNullOrWhiteSpace(metaName))
+                                      {
+                                          var escapedMetaName = metaName.Replace("\\", "\\\\").Replace("\"", "\\\"").Replace("\r", "\\r").Replace("\n", "\\n").Replace("\t", "\\t");
+                                          var escapedMetaValue = metaValue.Replace("\\", "\\\\").Replace("\"", "\\\"").Replace("\r", "\\r").Replace("\n", "\\n").Replace("\t", "\\t");
+                                          metadataItems.Add($"        \"{escapedMetaName}\": \"{escapedMetaValue}\"");
+                                      }
+                                  }
+                              }
+                          }
+                          
+                          refBuilder.AppendLine(string.Join(",\n", metadataItems));
+                          refBuilder.AppendLine("      }");
+                          refBuilder.Append("    }");
+                          
+                          references.Add(refBuilder.ToString());
+                      }
+                  }
+              }
+              
+              jsonBuilder.AppendLine(string.Join(",\n", references));
+              jsonBuilder.AppendLine("  ]");
+              jsonBuilder.AppendLine("}");
+              
+              var jsonDir = Path.GetDirectoryName(JsonFilePath);
+              if (!Directory.Exists(jsonDir))
+              {
+                  Directory.CreateDirectory(jsonDir);
+              }
+              
+              File.WriteAllText(JsonFilePath, jsonBuilder.ToString(), System.Text.Encoding.UTF8);
+              Log.LogMessage(MessageImportance.Normal, $"References JSON written to: {JsonFilePath}");
+          }
+      }
+      catch (Exception ex)
+      {
+          Log.LogError($"Error generating references JSON: {ex.Message}");
+      }
+      ]]>
+			</Code>
+		</Task>
+	</UsingTask>
+
+	<Target Name="GenerateBuildDataForSourceGenerator" BeforeTargets="CoreCompile" AfterTargets="ResolveAssemblyReferences">
+		<PropertyGroup>
+			<BuildPropertiesJsonFile>$(IntermediateOutputPath)BuildProperties.json</BuildPropertiesJsonFile>
+			<BuildReferencesJsonFile>$(IntermediateOutputPath)BuildReferences.json</BuildReferencesJsonFile>
+		</PropertyGroup>
+
+		<MakeDir Directories="$(IntermediateOutputPath)" />
+
+		<Message Text="=== GENERATING BUILD DATA JSON FOR SOURCE GENERATOR ===" Importance="high" />
+
+		<EnumeratePropertiesAsJson ProjectFile="$(MSBuildProjectFile)" JsonFilePath="$(BuildPropertiesJsonFile)" />
+		<EnumerateReferencesAsJson ProjectFile="$(MSBuildProjectFile)" JsonFilePath="$(BuildReferencesJsonFile)" />
+
+		<!-- Add JSON files as AdditionalFiles for source generators -->
+		<ItemGroup>
+			<AdditionalFiles Include="$(BuildPropertiesJsonFile)" Condition="Exists('$(BuildPropertiesJsonFile)')" SourceGenerator="BuildData" Kind="Properties" />
+			<AdditionalFiles Include="$(BuildReferencesJsonFile)" Condition="Exists('$(BuildReferencesJsonFile)')" SourceGenerator="BuildData" Kind="References" />
+		</ItemGroup>
+
+		<Message Text="Build data JSON files added as AdditionalFiles for source generators" Importance="high" />
+	</Target>
 </Project>

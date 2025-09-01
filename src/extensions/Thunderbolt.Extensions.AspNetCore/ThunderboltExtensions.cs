@@ -7,10 +7,13 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 
 using Thunderbolt.Extensions.Abstractions;
 
+
 namespace Thunderbolt.Extensions;
 
 public static class ThunderboltExtensions
 {
+    public static bool before = true;
+
     public static IWebHostBuilder UseThunderbolt<TRegistration>(this IWebHostBuilder hostBuilder)
         where TRegistration : notnull, ThunderboltMsRegistration, new()
     {
@@ -28,14 +31,29 @@ public static class ThunderboltExtensions
     {
         if (ThunderboltMsRegistration.isGeneratingCode)
         {
-            ThunderboltMsRegistration.BuilderServices = webAppBuilder.Services;
-            return webAppBuilder;
+            if (!before)
+            {
+                webAppBuilder.Build();
+                //try { webAppBuilder.Build(); } catch { }
+                ThunderboltMsRegistration.BuilderServices = webAppBuilder.Services;
+                throw new ThunderboltCodeGenerationIntentionalException();
+            }
+            else
+            {
+                return webAppBuilder;
+            }
         }
-        var factory = new ThunderboltServiceProviderFactory<TRegistration>();
-        var replacement = ServiceDescriptor.Singleton<IServiceProviderFactory<IServiceCollection>>(factory);
-        webAppBuilder.Services.Replace(replacement);
-        webAppBuilder.WebHost.ConfigureServices(services => services.Replace(replacement));
-        webAppBuilder.Host.UseServiceProviderFactory(factory);
+
+        if (before)
+        {
+            var factory = new ThunderboltServiceProviderFactory<TRegistration>();
+            var replacement = ServiceDescriptor.Singleton<IServiceProviderFactory<IServiceCollection>>(factory);
+            webAppBuilder.Services.Replace(replacement);
+#pragma warning disable ASP0012 // Suggest using builder.Services over Host.ConfigureServices or WebHost.ConfigureServices
+            webAppBuilder.WebHost.ConfigureServices(services => services.Replace(replacement));
+#pragma warning restore ASP0012 // Suggest using builder.Services over Host.ConfigureServices or WebHost.ConfigureServices
+            webAppBuilder.Host.UseServiceProviderFactory(factory);
+        }
         return webAppBuilder;
     }
 #endif

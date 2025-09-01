@@ -48,7 +48,7 @@ internal static class AttributeGeneratorHelper
             {
                 case Consts.includeAttrName:
                     INamedTypeSymbol? impl = attr.data.ConstructorArguments.Where(arg => arg.Kind == TypedConstantKind.Type).Select(arg => arg.Type as INamedTypeSymbol).FirstOrDefault(t => t is not null);
-                    int serviceLifetime = attr.data.ConstructorArguments.Where(arg => arg.Kind == TypedConstantKind.Enum).Select(arg => (int)arg.Value).First();
+                    int serviceLifetime = attr.data.ConstructorArguments.Where(arg => arg.Kind == TypedConstantKind.Enum).Select(arg => (int)(arg.Value ?? throw new InvalidOperationException())).First();
                     inclusions.Add((type, impl, serviceLifetime));
                     bool registerChilds = (attr.data.ConstructorArguments.Select(arg => arg.Value).FirstOrDefault(arg => arg is bool) as bool?) ?? false;
                     if (registerChilds)
@@ -69,7 +69,7 @@ internal static class AttributeGeneratorHelper
             }
         }
 
-        return inclusions.WhereIf(exclusions.Any(), incl => !exclusions.Any(excl => incl.type.GetFullyQualifiedName() == excl.GetFullyQualifiedName())).Select(incl => new ServiceDescriptor(incl.serviceLifetime, TypeDescriptor.FromTypeSymbol(incl.type, compilation), incl.impl is null ? null : TypeDescriptor.FromTypeSymbol(incl.impl, compilation), null, false, true));
+        return inclusions.WhereIf(exclusions.Any(), incl => !exclusions.Any(excl => incl.type.GetFullyQualifiedName() == excl.GetFullyQualifiedName())).Select(incl => new ServiceDescriptor(incl.serviceLifetime, TypeDescriptor.FromTypeSymbol(incl.type, compilation), incl.impl is null ? null : TypeDescriptor.FromTypeSymbol(incl.impl, compilation), null, false, true, 0));
     }
 
     private static IEnumerable<ServiceDescriptor> IncludedRegexTypes(Compilation compilation)
@@ -123,7 +123,7 @@ internal static class AttributeGeneratorHelper
 
         return inclusions
             .WhereIf(exclusions.Any(), incl => !exclusions.Any(excl => excl.typeFullName == incl.typeFullName))
-            .Select(incl => new ServiceDescriptor(incl.servcieLifetime, TypeDescriptor.FromTypeSymbol(incl.type, compilation), incl.impl is null ? null : TypeDescriptor.FromTypeSymbol(incl.impl, compilation), null, false, true));
+            .Select(incl => new ServiceDescriptor(incl.servcieLifetime, TypeDescriptor.FromTypeSymbol(incl.type, compilation), incl.impl is null ? null : TypeDescriptor.FromTypeSymbol(incl.impl, compilation), null, false, true, 0));
     }
 
     internal static IEnumerable<ServiceDescriptor> AllIncludedTypes(Compilation compilation)

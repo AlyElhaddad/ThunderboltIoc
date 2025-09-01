@@ -14,7 +14,9 @@ internal class TypeDescriptor : IEquatable<TypeDescriptor>
         ienumerableFullName = typeof(IEnumerable<>).GetFullyQualifiedName();
     }
 
+#pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
     private TypeDescriptor() { }
+#pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
 
     public TypeDescriptor(
         string name,
@@ -23,6 +25,7 @@ internal class TypeDescriptor : IEquatable<TypeDescriptor>
         TypeDescriptor? genericTypeDefinition,
         bool isGenericParameter,
         IEnumerable<TypeDescriptor> genericArgs,
+        bool hasExternalNonPublicGenericArgs,
         bool isExternalNonPublicType,
         IEnumerable<IEnumerable<TypeDescriptor>> ctorsParamsTypes,
         IDictionary<string, TypeDescriptor> publicSetProperties,
@@ -35,6 +38,7 @@ internal class TypeDescriptor : IEquatable<TypeDescriptor>
         GenericTypeDefinition = genericTypeDefinition;
         IsGenericParameter = isGenericParameter;
         GenericArgs = genericArgs;
+        HasExternalNonPublicGenericArgs = hasExternalNonPublicGenericArgs;
         IsExternalNonPublicType = isExternalNonPublicType;
         CtorsParamsTypes = ctorsParamsTypes;
         PublicSetProperties = publicSetProperties;
@@ -52,7 +56,7 @@ internal class TypeDescriptor : IEquatable<TypeDescriptor>
     public bool IsNonClosedGenericType => IsGenericParameter || GenericArgs.Any(arg => arg.IsNonClosedGenericType) || NestingTypes.Any(nestingType => nestingType.IsNonClosedGenericType);
     public IEnumerable<TypeDescriptor> GenericArgs { get; private set; }
 
-    public bool HasExternalNonPublicGenericArgs => GenericArgs.Any(arg => !arg.IsGenericParameter && arg.TendsToExternalNonPublic);
+    public bool HasExternalNonPublicGenericArgs { get; private set; }
     public bool IsNestedInTypeThatHasExternalNonPublicGenericArgs => NestingTypes.Any(nestingType => nestingType.HasExternalNonPublicGenericArgs);
     public bool IsExternalNonPublicType { get; private set; }
     public bool IsNestedInExternalNonPublicType => NestingTypes.Any(type => type.TendsToExternalNonPublic);
@@ -72,8 +76,8 @@ internal class TypeDescriptor : IEquatable<TypeDescriptor>
 
     private static TypeDescriptor FromTypeSymbol(ITypeSymbol typeSymbol, Compilation compilation, int maxDepth, IDictionary<string, TypeDescriptor>? visited)
     {
-        if (visited is null)
-            visited = new Dictionary<string, TypeDescriptor>();
+        visited ??= new Dictionary<string, TypeDescriptor>();
+
         TypeDescriptor descriptor = new();
 
         --maxDepth;
@@ -89,6 +93,7 @@ internal class TypeDescriptor : IEquatable<TypeDescriptor>
         bool isImplemented = typeSymbol.HasImplementation();
         bool isGenericParameter = typeSymbol.IsGenericParameter();
         IEnumerable<TypeDescriptor> genericArgs = maxDepth <= 0 ? Enumerable.Empty<TypeDescriptor>() : typeSymbol.AllGenericArgs().Select(genericArg => FromTypeSymbol(genericArg, compilation, visited));
+        bool hasExternalNonPublicGenericArgs = genericArgs.Any(arg => !arg.IsGenericParameter && arg.TendsToExternalNonPublic);
         bool isExternalNonPublicType = typeSymbol.IsExternal(compilation) && typeSymbol.IsNonPublic();
         IEnumerable<IEnumerable<TypeDescriptor>> ctorsParamsTypes = maxDepth <= 0 ? Enumerable.Empty<IEnumerable<TypeDescriptor>>() : (typeSymbol is not INamedTypeSymbol ? Enumerable.Empty<IEnumerable<TypeDescriptor>>() : namedTypeSymbol!.InstanceConstructors.Where(ctor => ctor.DeclaredAccessibility == Accessibility.Public).Select(ctor => ctor.Parameters.Select(ctorParam => FromTypeSymbol(ctorParam.Type, compilation, visited))));
 #pragma warning disable RS1024 // Compare symbols correctly
@@ -118,7 +123,6 @@ internal class TypeDescriptor : IEquatable<TypeDescriptor>
             }
             else
             {
-                var unboundGenericType = namedTypeSymbol.ConstructUnboundGenericType();
                 genericTypeDefinition = FromTypeSymbol(namedTypeSymbol.ConstructUnboundGenericType(), compilation, maxDepth, visited);
             }
         }
@@ -133,6 +137,7 @@ internal class TypeDescriptor : IEquatable<TypeDescriptor>
         descriptor.GenericTypeDefinition = genericTypeDefinition;
         descriptor.IsGenericParameter = isGenericParameter;
         descriptor.GenericArgs = genericArgs;
+        descriptor.HasExternalNonPublicGenericArgs = hasExternalNonPublicGenericArgs;
         descriptor.IsExternalNonPublicType = isExternalNonPublicType;
         descriptor.CtorsParamsTypes = ctorsParamsTypes;
         descriptor.PublicSetProperties = publicSetProperties;
@@ -152,7 +157,8 @@ internal class TypeDescriptor : IEquatable<TypeDescriptor>
         bool isImplemented = type.HasImplementation();
         bool isGenericParameter = type.IsGenericParameter;
         IEnumerable<TypeDescriptor> genericArgs = maxDepth <= 0 ? Enumerable.Empty<TypeDescriptor>() : type.GetGenericArguments().Select(genericArg => FromType(genericArg, homeAssembly, maxDepth));
-        bool isExternalNonPublicType = type.IsNotPublic && type.Assembly != homeAssembly;
+        bool hasExternalNonPublicGenericArgs = genericArgs.Any(arg => !arg.IsGenericParameter && arg.TendsToExternalNonPublic);
+        bool isExternalNonPublicType = (type.IsNotPublic || type.IsNestedPrivate || hasExternalNonPublicGenericArgs) && type.Assembly != homeAssembly;
         IEnumerable<IEnumerable<TypeDescriptor>> ctorsParamsTypes = maxDepth <= 0 ? Enumerable.Empty<IEnumerable<TypeDescriptor>>() : type.GetConstructors().Where(ctor => ctor.IsPublic).Select(ctor => ctor.GetParameters().Select(ctorParam => FromType(ctorParam.ParameterType, homeAssembly, maxDepth)));
         IDictionary<string, TypeDescriptor> publicSetProperties = maxDepth <= 0 ? new Dictionary<string, TypeDescriptor>() : type.PublicSetProperties().ToDictionary(prop => prop.Name, prop => FromType(prop.PropertyType, homeAssembly, maxDepth));
         IEnumerable<TypeDescriptor> ancestors = maxDepth <= 0 ? Enumerable.Empty<TypeDescriptor>() : type.Ancestors().Select(parent => FromType(parent, homeAssembly, maxDepth));
@@ -198,6 +204,7 @@ internal class TypeDescriptor : IEquatable<TypeDescriptor>
             genericTypeDefinition,
             isGenericParameter,
             genericArgs,
+            hasExternalNonPublicGenericArgs,
             isExternalNonPublicType,
             ctorsParamsTypes,
             publicSetProperties,

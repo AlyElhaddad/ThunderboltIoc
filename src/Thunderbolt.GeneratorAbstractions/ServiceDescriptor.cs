@@ -10,7 +10,8 @@ internal struct ServiceDescriptor : IEquatable<ServiceDescriptor>
         TypeDescriptor? implType,
         IEnumerable<TypeDescriptor>? implSelectorTypes,
         bool hasFactory,
-        bool shouldUseFullDictate)
+        bool shouldUseFullDictate,
+        int definitionNumber)
     {
         Lifetime = lifetime;
         ServiceType = serviceType;
@@ -18,6 +19,7 @@ internal struct ServiceDescriptor : IEquatable<ServiceDescriptor>
         ImplSelectorTypes = implSelectorTypes;
         HasFactory = hasFactory;
         ShouldUseFullDictate = shouldUseFullDictate;
+        DefinitionNumber = definitionNumber;
     }
 
     public int? Lifetime { get; set; }
@@ -26,6 +28,7 @@ internal struct ServiceDescriptor : IEquatable<ServiceDescriptor>
     public IEnumerable<TypeDescriptor>? ImplSelectorTypes { get; set; }
     public bool HasFactory { get; set; }
     public bool ShouldUseFullDictate { get; set; }
+    public int DefinitionNumber { get; set; }
 
     public IEnumerable<TypeDescriptor> GetPossibleImplementations(IEnumerable<ServiceDescriptor> allServices)
     {

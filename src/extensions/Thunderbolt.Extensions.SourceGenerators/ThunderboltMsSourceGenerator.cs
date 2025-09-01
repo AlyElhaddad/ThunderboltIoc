@@ -9,8 +9,12 @@ using Thunderbolt.GeneratorAbstractions;
 
 namespace Thunderbolt.Extensions.SourceGenerators;
 
+#pragma warning disable RS1036 // Specify analyzer banned API enforcement setting
+#pragma warning disable RS1042 // Implementations of this interface are not allowed
 [Generator]
 public class ThunderboltMsSourceGenerator : ISourceGenerator
+#pragma warning restore RS1042 // Implementations of this interface are not allowed
+#pragma warning restore RS1036 // Specify analyzer banned API enforcement setting
 {
     public void Initialize(GeneratorInitializationContext context)
     {
@@ -21,6 +25,7 @@ public class ThunderboltMsSourceGenerator : ISourceGenerator
 //            System.Diagnostics.Debugger.Launch();
 //        }
 //#endif
+IIncrementalGenerator
     }
 
     public void Execute(GeneratorExecutionContext context)
@@ -47,32 +52,35 @@ public class ThunderboltMsSourceGenerator : ISourceGenerator
             && configFile.GetText()?.ToString() is string configText
             && !string.IsNullOrWhiteSpace(configText))
         {
-            generatorConfig = JsonConvert.DeserializeObject<GeneratorConfig>(configText);
+            try { generatorConfig = JsonConvert.DeserializeObject<GeneratorConfig>(configText); }
+            catch { generatorConfig = default; }
         }
         else
         {
             generatorConfig = default;
         }
-
+        GeneratorConfig.Instance = generatorConfig;
         compilationOptions = compilationOptions.WithMetadataImportOptions(MetadataImportOptions.All);
         compilation = compilation.WithOptions(compilationOptions);
-
+        
         INamedTypeSymbol? registrarTypeSymbol = Util.GetRegistrarTypeSymbol(compilation);
         HashSet<IMethodSymbol>? registrarNonFactoryMethods = Util.GetRegistrarNonFactoryMethods(registrarTypeSymbol);
         if (registrarTypeSymbol is null || registrarNonFactoryMethods is null)
         {
             return;
         }
-        INamedTypeSymbol registrationSymbol = compilation.GetFirstRegistration();
+        INamedTypeSymbol? registrationSymbol = compilation.GetFirstRegistration();
+        if (registrationSymbol is null)
+            return;
         string symbolFullName = registrationSymbol.GetFullyQualifiedName()!;
-        string typesUtilPath = TempSourceUtil.Emit(compilation, context.AnalyzerConfigOptions.GlobalOptions, symbolFullName);
+        string typesUtilPath = TempSourceUtil.Emit(context, symbolFullName);
         string serializedServices = TempSourceUtil.RunTempSource(typesUtilPath, generatorConfig.StartupArgs);
         var msDescriptors
             = JsonConvert
             .DeserializeObject<ServiceDescriptor[]>(serializedServices);
         var allServices = compilation.GetAllServices(msDescriptors);
         var specialServices = Util.GetSpecialServices(compilation);
-        Dictionary<TypeDescriptor, RequiredField> requiredFields = new();
+        Dictionary<TypeDescriptor, IDictionary<int, RequiredField>> requiredFields = new();
         var effectiveServices = allServices.Exclude(specialServices);
 
         //string staticRegistrer = GeneratorHelper.GenerateStaticRegister(effectiveServices ...);
@@ -99,7 +107,6 @@ namespace {registrationSymbol.ContainingNamespace.GetFullNamespaceName().RemoveP
 }}
 #nullable restore
 #pragma warning restore";
-        //{(string.IsNullOrWhiteSpace(staticRegistrer) ? "" : staticRegistrer.AddIndentation(3))}
 
         context.AddSource($"{registrationSymbol.Name}.g.cs", source);
     }

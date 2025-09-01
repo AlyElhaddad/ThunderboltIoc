@@ -8,8 +8,10 @@ using System.Collections.Immutable;
 
 namespace Thunderbolt.GeneratorAbstractions;
 
+#pragma warning disable RS1036 // Specify analyzer banned API enforcement setting
 [DiagnosticAnalyzer(LanguageNames.CSharp)]
 internal class ThunderboltAnalyzer : DiagnosticAnalyzer
+#pragma warning restore RS1036 // Specify analyzer banned API enforcement setting
 {
     private static readonly IEnumerable<string> thunderboltAttributeNames = new string[]
     {
@@ -177,7 +179,6 @@ internal class ThunderboltAnalyzer : DiagnosticAnalyzer
         }
         #endregion
             );
-
         }
         catch (Exception ex)
         {
@@ -212,7 +213,8 @@ internal class ThunderboltAnalyzer : DiagnosticAnalyzer
                 "Thunderbolt AnalyzerError: {0}",
                 "AnalyzerError",
                 DiagnosticSeverity.Info,
-                isEnabledByDefault: true);
+                isEnabledByDefault: true,
+                customTags: new[] { WellKnownDiagnosticTags.CompilationEnd, WellKnownDiagnosticTags.AnalyzerException });
 
         internal static DiagnosticDescriptor RegistrationNotAttached
             = new("TB001",
@@ -220,7 +222,8 @@ internal class ThunderboltAnalyzer : DiagnosticAnalyzer
                 $"The class '{{0}}' implements '{Consts.registrationClass}' but a call to '{Consts.activatorClass}.{Consts.AttachMethodName}<{{0}}>()' or '{Consts.extensionsClass}.{Consts.UseMethodName}<{{0}}>()' was not found in this project. Corresponding code-generation will therefore not happen.",
                 "Design",
                 DiagnosticSeverity.Info,
-                isEnabledByDefault: true);
+                isEnabledByDefault: true,
+                customTags: new[] { WellKnownDiagnosticTags.CompilationEnd });
 
         internal static DiagnosticDescriptor MissingPartialModifier
             = new("TB102",
@@ -228,7 +231,8 @@ internal class ThunderboltAnalyzer : DiagnosticAnalyzer
                 $"The class '{{0}}' implements '{Consts.registrationClass}' but does not have the 'partial' modifier on any of its definitions. Corresponding code-generation will therefore not happen.",
                 "Design",
                 DiagnosticSeverity.Warning,
-                isEnabledByDefault: true);
+                isEnabledByDefault: true,
+                customTags: new[] { WellKnownDiagnosticTags.CompilationEnd });
 
         internal static DiagnosticDescriptor MissingRegistration
             = new("TB103",
@@ -236,7 +240,8 @@ internal class ThunderboltAnalyzer : DiagnosticAnalyzer
                 $"Thunderbolt atribute registrations were found. However, no implementation of '{Consts.registrationClass}' was found in this project. Corresponding code-generation will therefore not happen.",
                 "Design",
                 DiagnosticSeverity.Warning,
-                isEnabledByDefault: true);
+                isEnabledByDefault: true,
+                customTags: new[] { WellKnownDiagnosticTags.CompilationEnd });
 
         internal static DiagnosticDescriptor GenerationFailureForType
             = new("TB104",
@@ -244,7 +249,8 @@ internal class ThunderboltAnalyzer : DiagnosticAnalyzer
                 $"Failed to generate code for '{{0}}'. Please report the relevant error on the GitHub repository.{Environment.NewLine}The relevant error:{Environment.NewLine}{{1}}",
                 "Design",
                 DiagnosticSeverity.Warning,
-                isEnabledByDefault: true);
+                isEnabledByDefault: true,
+                customTags: new[] { WellKnownDiagnosticTags.CompilationEnd });
 
         internal static DiagnosticDescriptor NoSuitableConstructor
             = new("TB205",
@@ -252,7 +258,8 @@ internal class ThunderboltAnalyzer : DiagnosticAnalyzer
                 "{0}",
                 "Design",
                 DiagnosticSeverity.Error,
-                isEnabledByDefault: true);
+                isEnabledByDefault: true,
+                customTags: new[] { WellKnownDiagnosticTags.CompilationEnd });
 
         internal static DiagnosticDescriptor CyclicDependencies
             = new("TB206",
@@ -260,7 +267,8 @@ internal class ThunderboltAnalyzer : DiagnosticAnalyzer
                 $"Cyclic dependencies were found in the dependency tree(s) of the following service(s) ({{0}}). Runtime errors are expected.",
                 "Design",
                 DiagnosticSeverity.Error,
-                isEnabledByDefault: true);
+                isEnabledByDefault: true,
+                customTags: new[] { WellKnownDiagnosticTags.CompilationEnd });
 
         internal static DiagnosticDescriptor TopLevelRegistration
           = new("TB207",
@@ -268,7 +276,8 @@ internal class ThunderboltAnalyzer : DiagnosticAnalyzer
               $"The class '{{0}}' that implements '{Consts.registrationClass}' must be a top-level (not nested) class. It is currently not.",
               "Design",
               DiagnosticSeverity.Error,
-              isEnabledByDefault: true);
+              isEnabledByDefault: true,
+              customTags: new[] { WellKnownDiagnosticTags.CompilationEnd });
     }
     #endregion
 }

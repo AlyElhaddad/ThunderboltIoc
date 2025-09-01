@@ -41,21 +41,32 @@ internal static class ExplicitGeneratorHelper
                 var syntaxExpressionName = (syntax.Expression as MemberAccessExpressionSyntax)?.Name;
                 var (genericName, identifierName) = (syntaxExpressionName as GenericNameSyntax, syntaxExpressionName as IdentifierNameSyntax);
 
+                string methodName = op.TargetMethod.OriginalDefinition.Name;
+
+                int lifetime = methodName switch
+                {
+                    _ when methodName.StartsWith("AddSingleton") => 0,
+                    _ when methodName.StartsWith("AddScoped") => 1,
+                    _ when methodName.StartsWith("AddTransient") => 2,
+                    _ => throw new InvalidOperationException("Unknown service lifetime.")
+                };
+
                 if (identifierName is not null
                     && op.Arguments.Length == 1
                     && op.Arguments[0].Parameter is IParameterSymbol parameterSymbol
-                    && Regex.IsMatch(op.TargetMethod.OriginalDefinition.Name, @"Add(Transient|Scoped|Singleton)Factory")
+                    && Regex.IsMatch(methodName, @"Add(Transient|Scoped|Singleton)Factory")
                     && parameterSymbol.Type.GenericArgs() is IEnumerable<ITypeSymbol> genericArgs
                     && genericArgs.Count() == 1)
                 {
                     //factory, inferred type
                     yield return new ServiceDescriptor(
-                        lifetime: null,
+                        lifetime: lifetime,
                         serviceType: TypeDescriptor.FromTypeSymbol(genericArgs.First(), compilation),
                         implType: null,
                         implSelectorTypes: null,
                         hasFactory: true,
-                        shouldUseFullDictate: false);
+                        shouldUseFullDictate: true,
+                        definitionNumber: 0);
                     continue;
                 }
                 else if (genericName is null)
@@ -73,12 +84,13 @@ internal static class ExplicitGeneratorHelper
                         if (semanticModel.GetSpeculativeTypeInfo(serviceArg.SpanStart, serviceArg, SpeculativeBindingOption.BindAsTypeOrNamespace).Type is INamedTypeSymbol serviceType)
                         {
                             yield return new ServiceDescriptor(
-                                lifetime: null,
+                                lifetime: lifetime,
                                 serviceType: TypeDescriptor.FromTypeSymbol(serviceType, compilation),
                                 implType: null,
                                 implSelectorTypes: null,
                                 hasFactory: false,
-                                shouldUseFullDictate: false);
+                                shouldUseFullDictate: true,
+                                definitionNumber: 0);
                         }
                     }
                     else if (genericName.TypeArgumentList.Arguments.Count == 2)
@@ -88,12 +100,13 @@ internal static class ExplicitGeneratorHelper
                             && semanticModel.GetSpeculativeTypeInfo(implArg.SpanStart, implArg, SpeculativeBindingOption.BindAsTypeOrNamespace).Type is INamedTypeSymbol implType)
                         {
                             yield return new ServiceDescriptor(
-                                lifetime: null,
+                                lifetime: lifetime,
                                 serviceType: TypeDescriptor.FromTypeSymbol(serviceType, compilation),
                                 implType: TypeDescriptor.FromTypeSymbol(implType, compilation),
                                 implSelectorTypes: null,
                                 hasFactory: false,
-                                shouldUseFullDictate: false);
+                                shouldUseFullDictate: true,
+                                definitionNumber: 0);
                         }
                     }
                 }
@@ -106,12 +119,13 @@ internal static class ExplicitGeneratorHelper
                     {
                         //factory
                         yield return new ServiceDescriptor(
-                            lifetime: null,
+                            lifetime: lifetime,
                             serviceType: TypeDescriptor.FromTypeSymbol(serviceType, compilation),
                             implType: null,
                             implSelectorTypes: null,
                             hasFactory: true,
-                            shouldUseFullDictate: false);
+                            shouldUseFullDictate: true,
+                            definitionNumber: 0);
                         continue;
                     }
 
@@ -122,7 +136,7 @@ internal static class ExplicitGeneratorHelper
                     ArgumentSyntax arg = syntax.ArgumentList.Arguments[0];
                     IEnumerable<TypeOfExpressionSyntax>? typeofStatements = null;
                     if (arg.Expression is ParenthesizedLambdaExpressionSyntax lambdaExpr)
-                    { // () => { }
+                    { // () => { } and () => typeof()
                         typeofStatements
                             = lambdaExpr.Block?.DescendantNodes()?.OfType<ReturnStatementSyntax>()?.Select(ret => ret.Expression)?.OfType<TypeOfExpressionSyntax>()
                             ?? (lambdaExpr.ExpressionBody is TypeOfExpressionSyntax typeofExpr ? typeofExpr : null)?.AsEnumerable()
@@ -139,7 +153,7 @@ internal static class ExplicitGeneratorHelper
                         continue;
                     }
                     yield return new ServiceDescriptor(
-                        lifetime: null,
+                        lifetime: lifetime,
                             serviceType: TypeDescriptor.FromTypeSymbol(serviceType, compilation),
                         implType: null,
                         implSelectorTypes:
@@ -148,7 +162,8 @@ internal static class ExplicitGeneratorHelper
                                 .OfType<INamedTypeSymbol>()
                                 .Select(serviceType => TypeDescriptor.FromTypeSymbol(serviceType, compilation)),
                         hasFactory: false,
-                        shouldUseFullDictate: false);
+                        shouldUseFullDictate: true,
+                        definitionNumber: 0);
                 }
             }
         }

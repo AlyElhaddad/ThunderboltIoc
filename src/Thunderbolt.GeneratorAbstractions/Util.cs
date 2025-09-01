@@ -24,7 +24,8 @@ internal static class Util
             null,
             null,
             true,
-            false);
+            false,
+            0);
 
         //IThunderboltScope
         yield return new ServiceDescriptor(
@@ -33,7 +34,8 @@ internal static class Util
             null,
             null,
             true,
-            false);
+            false,
+            0);
 
         //IThunderboltResolver
         yield return new ServiceDescriptor(
@@ -42,7 +44,8 @@ internal static class Util
             null,
             null,
             false,
-            false);
+            false,
+            0);
 
         //IServiceProvider
         yield return new ServiceDescriptor(
@@ -51,7 +54,30 @@ internal static class Util
             null,
             null,
             false,
-            false);
+            false,
+            0);
+
+#if ThunderboltExtensionsSourceGen
+        //IServiceScopeFactory
+        yield return new ServiceDescriptor(
+            Consts.SingletonValue,
+            TypeDescriptor.FromTypeSymbol(compilation.GetTypeByFullName(Consts.IServiceScopeFactoryTypeFullName)!, compilation),
+            null,
+            null,
+            false,
+            false,
+            0);
+
+        //IServiceProviderIsService
+        yield return new ServiceDescriptor(
+            Consts.SingletonValue,
+            TypeDescriptor.FromTypeSymbol(compilation.GetTypeByFullName(Consts.IServiceProviderIsServiceTypeFullName)!, compilation),
+            null,
+            null,
+            false,
+            false,
+            0);
+#endif
     }
     public static IEnumerable<ServiceDescriptor> GetAllServices(this Compilation compilation, IEnumerable<ServiceDescriptor>? msReg = null)
         => compilation.GetAllServicesWithSymbols(out _, msReg).Select(item => item.service);
@@ -113,7 +139,7 @@ internal static class Util
                 GetSpecialServices(compilation)
                 .Select(service => (service, default(INamedTypeSymbol?))));
     }
-    public static INamedTypeSymbol GetFirstRegistration(this Compilation compilation)
+    public static INamedTypeSymbol? GetFirstRegistration(this Compilation compilation)
     {
         INamedTypeSymbol? registrarTypeSymbol = Util.GetRegistrarTypeSymbol(compilation);
         HashSet<IMethodSymbol>? registrarNonFactoryMethods = Util.GetRegistrarNonFactoryMethods(registrarTypeSymbol);
@@ -134,6 +160,6 @@ internal static class Util
                     .Where(item => item.declarations?.Any() == true)
                     .Select(item => item.symbol);
             })
-            .First();
+            .FirstOrDefault();
     }
 }

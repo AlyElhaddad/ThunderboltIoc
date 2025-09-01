@@ -32,4 +32,12 @@ internal static class StringExtensions
     {
         return Regex.Replace(str.Replace("@", "_tp_"), @"[^A-z0-9_]{1}", "_");
     }
+    public static string VarNameForm(this string str, int serviceDefinitionNumber)
+    {
+        return Regex.Replace(str.DefinitionNumberSuffix(serviceDefinitionNumber).Replace("@", "_tp_"), @"[^A-z0-9_]{1}", "_");
+    }
+    public static string DefinitionNumberSuffix(this string str, int serviceDefinitionNumber)
+    {
+        return serviceDefinitionNumber > 0 ? str + serviceDefinitionNumber.ToString() : str;
+    }
 }

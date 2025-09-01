@@ -1,14 +1,20 @@
 ﻿using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 
+using Newtonsoft.Json;
+
 using System.Diagnostics;
 
 using Thunderbolt.GeneratorAbstractions;
 
 namespace ThunderboltIoc.SourceGenerators;
 
+#pragma warning disable RS1036 // Specify analyzer banned API enforcement setting
+#pragma warning disable RS1042 // Implementations of this interface are not allowed
 [Generator]
 public class ThunderboltSourceGenerator : ISourceGenerator
+#pragma warning restore RS1042 // Implementations of this interface are not allowed
+#pragma warning restore RS1036 // Specify analyzer banned API enforcement setting
 {
     public virtual void Initialize(GeneratorInitializationContext context)
     {
@@ -35,6 +41,20 @@ public class ThunderboltSourceGenerator : ISourceGenerator
         {
             return;
         }
+
+        GeneratorConfig generatorConfig;
+        if (context.AdditionalFiles.FirstOrDefault(file => Path.GetFileName(file.Path).ToLowerInvariant() == "thunderbolt.config.json") is AdditionalText configFile
+            && configFile.GetText()?.ToString() is string configText
+            && !string.IsNullOrWhiteSpace(configText))
+        {
+            generatorConfig = JsonConvert.DeserializeObject<GeneratorConfig>(configText);
+        }
+        else
+        {
+            generatorConfig = default;
+        }
+        GeneratorConfig.Instance = generatorConfig;
+
 
         compilationOptions = compilationOptions.WithMetadataImportOptions(MetadataImportOptions.All);
         compilation = compilation.WithOptions(compilationOptions);
@@ -63,9 +83,9 @@ public class ThunderboltSourceGenerator : ISourceGenerator
             var effectiveServices
                 = effectiveServicePairs
                 .Select(item => item.service);
-            Dictionary<TypeDescriptor, RequiredField> requiredFields = new();
+            Dictionary<TypeDescriptor, IDictionary<int, RequiredField>> requiredFields = new();
             //string staticRegistrer = GeneratorHelper.GenerateStaticRegister(effectiveServicePairs.Where(s => s.service.ServiceType.IsNonClosedGenericType || s.service.ImplType?.IsNonClosedGenericType == true), requiredFields);
-            string dictateTypeFactories = GeneratorHelper.GenerateDictateTypeFactories(effectiveServices, allServices.Select(item => item.service), requiredFields);
+            string dictateTypeFactories = GeneratorHelper.GenerateDictateTypeFactories(effectiveServices, new HashSet<ServiceDescriptor>(allServices.Select(item => item.service)), requiredFields);
             string requiredFieldsStr = GeneratorHelper.GenerateRequiredFields(effectiveServices, requiredFields);
 
             string source =

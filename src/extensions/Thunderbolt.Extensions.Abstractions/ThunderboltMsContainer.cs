@@ -3,8 +3,12 @@
 using ThunderboltIoc;
 
 namespace Thunderbolt.Extensions.Abstractions;
+internal class ThunderboltCodeGenerationIntentionalException : Exception { }
 
 internal sealed class ThunderboltMsContainer : ThunderboltContainer, ISupportRequiredService
+#if NET48_OR_GREATER || NETSTANDARD2_0_OR_GREATER || NET5_0_OR_GREATER
+    , IServiceProviderIsService
+#endif
 {
     private readonly struct ServiceScopeFactory : IServiceScopeFactory
     {
@@ -18,7 +22,10 @@ internal sealed class ThunderboltMsContainer : ThunderboltContainer, ISupportReq
             return new ServiceScope(container.CreateScope());
         }
     }
-    private readonly struct ServiceScope : IServiceScope, IThunderboltScope, ISupportRequiredService
+    private readonly struct ServiceScope : IServiceScope, IThunderboltScope, ISupportRequiredService, IDisposable
+#if NET48_OR_GREATER || NETSTANDARD2_0_OR_GREATER || NET5_0_OR_GREATER
+    , IServiceProviderIsService
+#endif
     {
         private readonly IThunderboltScope scope;
 
@@ -43,13 +50,26 @@ internal sealed class ThunderboltMsContainer : ThunderboltContainer, ISupportReq
 
         public object GetRequiredService(Type serviceType)
             => scope.GetService(serviceType) ?? throw new InvalidOperationException($"No service for type '{serviceType}' has been registered.");
+
+#if NET48_OR_GREATER || NETSTANDARD2_0_OR_GREATER || NET5_0_OR_GREATER
+        bool IServiceProviderIsService.IsService(Type serviceType)
+            => ThunderboltServiceRegistry.generic.TryGetValue(serviceType, out _) || ThunderboltServiceRegistry.InitializeAndGetServiceLifetime(serviceType) is not null;
+#endif
     }
 
     public ThunderboltMsContainer()
     {
         ThunderboltServiceRegistry<IServiceScopeFactory>.Dictate((_, _, userFactory) => userFactory!(null!), ThunderboltServiceLifetime.Singleton, null, _ => new ServiceScopeFactory(this));
+#if NET48_OR_GREATER || NETSTANDARD2_0_OR_GREATER || NET5_0_OR_GREATER
+        ThunderboltServiceRegistry<IServiceProviderIsService>.Dictate((resolver, _, userFactory) => userFactory!(null!), ThunderboltServiceLifetime.Singleton, null, _ => this);
+#endif
     }
 
     public object GetRequiredService(Type serviceType)
         => GetService(serviceType) ?? throw new InvalidOperationException($"No service for type '{serviceType}' has been registered.");
+
+#if NET48_OR_GREATER || NETSTANDARD2_0_OR_GREATER || NET5_0_OR_GREATER
+    bool IServiceProviderIsService.IsService(Type serviceType)
+        => ThunderboltServiceRegistry.generic.TryGetValue(serviceType, out _) || ThunderboltServiceRegistry.InitializeAndGetServiceLifetime(serviceType) is not null;
+#endif
 }

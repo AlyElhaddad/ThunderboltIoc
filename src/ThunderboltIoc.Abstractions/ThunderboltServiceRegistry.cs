@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System.Diagnostics;
+using System.Linq;
 using System.Reflection;
 
 using Thunderbolt.GeneratorAbstractions;
@@ -108,7 +109,7 @@ internal record HistoricalThunderboltServiceRegistry
 internal static class ThunderboltServiceRegistry
 {
     internal static readonly Dictionary<int, List<Action>> scopeClearanceActions = new();
-    internal static readonly Dictionary<Type, GenericRegistryAccessor> generic = new(capacity: 4); // this is first accessed via the container's ctor, into which we later add two more registrations, making it a total of 4 (container, scope, resolver, serviceProvider)
+    internal static readonly Dictionary<Type, GenericRegistryAccessor> generic = new(capacity: 4); // this is first accessed via the container's ctor, into which we later add more registrations, making it a total of 4 (container, scope, resolver, serviceProvider)
 
     internal static InvalidOperationException UnableToLocateException(Type t)
         => new($"Unable to locate a registered implementation for a service of type '{t}'.");
@@ -322,17 +323,20 @@ internal static class ThunderboltServiceRegistry<T>
             return;
 
         var localDictatedFactory = dictatedFactory!;
+        var localRegisteredLifetime = registeredLifetime!.Value;
         var localImplSelector = RegisteredImplSelector;
         var localUserFactory = RegisteredUserFactory;
+        var localSingletonInstance = singletonInstance;
+        var localScopedInstances = scopesInstances.ToDictionary(kvp => kvp.Key, kvp => (object)kvp.Value);
 
-        ThunderboltServiceRegistryHistory.Insert(0,
+        ThunderboltServiceRegistryHistory.Add(
             new HistoricalThunderboltServiceRegistry(
                 (resolver, implSelector, userFactory) => localDictatedFactory(resolver, implSelector, userFactory is null ? default : (userFactoryResolver => (T)userFactory(userFactoryResolver))),
-                registeredLifetime!.Value,
+                localRegisteredLifetime,
                 localImplSelector,
                 userFactoryResolver => localUserFactory!(userFactoryResolver),
-                singletonInstance,
-                scopesInstances.ToDictionary(kvp => kvp.Key, kvp => (object)kvp.Value)));
+                localSingletonInstance,
+                localScopedInstances));
 
         dictatedFactory = null;
         initialized = false;

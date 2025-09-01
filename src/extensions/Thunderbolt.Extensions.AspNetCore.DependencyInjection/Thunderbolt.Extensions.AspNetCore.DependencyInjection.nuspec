@@ -24,14 +24,28 @@
 				<dependency id="Thunderbolt.Extensions.Hosting" version="$version$" exclude="build,analyzers"/>
 				<dependency id="Thunderbolt.Extensions.AspNetCore" version="$version$" exclude="build,analyzers"/>
 			</group>
-			<group targetFramework="net5.0">
+			<group targetFramework="net6.0">
 				<dependency id="Thunderbolt.Extensions.SourceGenerators" version="$version$"
 							exclude="build,compile,runtime,contentFiles,native" include='analyzers'/>
 				<dependency id="Thunderbolt.Extensions.Abstractions" version="$version$" exclude="build,analyzers"/>
 				<dependency id="Thunderbolt.Extensions.Hosting" version="$version$" exclude="build,analyzers"/>
 				<dependency id="Thunderbolt.Extensions.AspNetCore" version="$version$" exclude="build,analyzers"/>
 			</group>
-			<group targetFramework="net6.0">
+			<group targetFramework="net7.0">
+				<dependency id="Thunderbolt.Extensions.SourceGenerators" version="$version$"
+							exclude="build,compile,runtime,contentFiles,native" include='analyzers'/>
+				<dependency id="Thunderbolt.Extensions.Abstractions" version="$version$" exclude="build,analyzers"/>
+				<dependency id="Thunderbolt.Extensions.Hosting" version="$version$" exclude="build,analyzers"/>
+				<dependency id="Thunderbolt.Extensions.AspNetCore" version="$version$" exclude="build,analyzers"/>
+			</group>
+			<group targetFramework="net8.0">
+				<dependency id="Thunderbolt.Extensions.SourceGenerators" version="$version$"
+							exclude="build,compile,runtime,contentFiles,native" include='analyzers'/>
+				<dependency id="Thunderbolt.Extensions.Abstractions" version="$version$" exclude="build,analyzers"/>
+				<dependency id="Thunderbolt.Extensions.Hosting" version="$version$" exclude="build,analyzers"/>
+				<dependency id="Thunderbolt.Extensions.AspNetCore" version="$version$" exclude="build,analyzers"/>
+			</group>
+			<group targetFramework="net9.0">
 				<dependency id="Thunderbolt.Extensions.SourceGenerators" version="$version$"
 							exclude="build,compile,runtime,contentFiles,native" include='analyzers'/>
 				<dependency id="Thunderbolt.Extensions.Abstractions" version="$version$" exclude="build,analyzers"/>
@@ -42,8 +56,10 @@
 	</metadata>
 	<files>
 		<file src="_._" target="lib\.NETCoreApp3.1\_._" />
-		<file src="_._" target="lib\net5.0\_._" />
 		<file src="_._" target="lib\net6.0\_._" />
+		<file src="_._" target="lib\net7.0\_._" />
+		<file src="_._" target="lib\net8.0\_._" />
+		<file src="_._" target="lib\net9.0\_._" />
 		<file src="..\..\..\assets\thunderbolt_128.png" target="images\"/>
 		<file src="..\targets\SharedTargets.targets" target="build\$id$.targets"/>
 		<!--<file src="..\..\README.md" target="docs\"/>-->

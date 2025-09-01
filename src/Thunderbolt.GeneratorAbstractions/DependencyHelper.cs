@@ -24,6 +24,10 @@ internal static class DependencyHelper
     }
     internal static IEnumerable<(string propName, ServiceDescriptor service)> GetInjectedProperties(TypeDescriptor typeDescriptor, IEnumerable<ServiceDescriptor> services)
     {
+        if (GeneratorConfig.Instance.EnablePropertyInjection == false) //needs to be enabled by default so that it would mimic the MSDI behavior
+        {
+            return Enumerable.Empty<(string propName, ServiceDescriptor service)>();
+        }
         return
             typeDescriptor
             .PublicSetProperties

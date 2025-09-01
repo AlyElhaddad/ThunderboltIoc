@@ -1,0 +1,4 @@
+﻿[*.cs]
+
+# RS1042: Implementations of this interface are not allowed
+dotnet_diagnostic.RS1042.severity = warning

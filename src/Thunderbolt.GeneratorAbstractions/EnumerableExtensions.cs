@@ -151,4 +151,19 @@ internal static class EnumerableExtensions
     }
     public static IEnumerable<T> Exclude<T>(this IEnumerable<T> source, IEnumerable<T> excluded)
         => source.Exclude(excluded, null);
+
+    public static Dictionary<TKey, TValue> ToDictionaryOverride<T, TKey, TValue>(this IEnumerable<T> source, Func<T, TKey> keySelector, Func<T, TValue> valueSelector)
+    {
+        if (source is null)
+            throw new ArgumentNullException(nameof(source));
+
+        Dictionary<TKey, TValue> result = new();
+
+        foreach(var item in source)
+        {
+            result[keySelector(item)] = valueSelector(item);
+        }
+
+        return result;
+    }
 }

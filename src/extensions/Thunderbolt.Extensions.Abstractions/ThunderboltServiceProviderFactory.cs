@@ -19,10 +19,15 @@ internal class ThunderboltServiceProviderFactory<TRegistration> : IServiceProvid
     public IServiceProvider CreateServiceProvider(IServiceCollection containerBuilder)
     {
         var privateTypes = (ThunderboltRegistration.PrivateTypes as Dictionary<string, PrivateType>)!;
+        var returnedServiceCount = new Dictionary<string, int>();
         foreach (var serviceDescriptor in containerBuilder)
         {
             var serviceType = serviceDescriptor.ServiceType;
             var serviceTypeName = serviceType.GetFullyQualifiedName();
+            int definitionNumber = returnedServiceCount.TryGetValue(serviceTypeName, out int lastDefinitionNumber) ? lastDefinitionNumber + 1 : 0;
+            returnedServiceCount[serviceTypeName] = definitionNumber;
+            if (definitionNumber > 0)
+                serviceTypeName += definitionNumber.ToString();
             bool isExternalNonPublicType = serviceType.TendsToExternalNonPublic(thisAssembly);
 
             var implType = serviceDescriptor.ImplementationType;

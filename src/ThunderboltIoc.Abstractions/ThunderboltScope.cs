@@ -19,10 +19,6 @@ internal sealed class ThunderboltScope : IThunderboltScope, IThunderboltResolver
 
     public T? Get<T>() where T : notnull
     {
-        if (typeof(T).ToString().StartsWith("Swashbuckle"))
-        {
-
-        }
         if (disposed)
             throw new ObjectDisposedException(GetType().FullName);
 
@@ -39,10 +35,6 @@ internal sealed class ThunderboltScope : IThunderboltScope, IThunderboltResolver
     }
     public object? GetService(Type serviceType)
     {
-        if (serviceType.ToString().StartsWith("Swashbuckle"))
-        {
-
-        }
         if (disposed)
             throw new ObjectDisposedException(GetType().FullName);
 

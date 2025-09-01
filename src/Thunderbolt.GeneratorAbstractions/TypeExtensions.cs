@@ -56,7 +56,7 @@ internal static class TypeExtensions
     internal static bool TendsToExternalNonPublic(this Type type, Assembly assembly)
     {
         return
-            (!type.IsPublic && type.Assembly != assembly)
+            ((!type.IsPublic || type.IsNestedPrivate) && type.Assembly != assembly)
             || type.GetGenericArguments().Any(genArg => !genArg.IsGenericParameter && genArg.TendsToExternalNonPublic(assembly))
             || type.NestingTypes().Any(type => type.TendsToExternalNonPublic(assembly));
     }

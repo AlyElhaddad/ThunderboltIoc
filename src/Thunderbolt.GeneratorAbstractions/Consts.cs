@@ -24,6 +24,7 @@ internal static class Consts
     internal const string mainNs = "ThunderboltIoc";
     internal const string extNs = "Thunderbolt.Extensions";
     internal const string system = nameof(System);
+    internal const string msdiNs = "Microsoft.Extensions.DependencyInjection";
 
     #endregion
 
@@ -42,13 +43,21 @@ internal static class Consts
     internal const string serviceProviderInteface = nameof(IServiceProvider);
     internal const string IServiceProviderTypeFullName = $"{global}{system}.{serviceProviderInteface}";
 
+#if ThunderboltExtensionsSourceGen
+    internal const string serviceScopeFactoryInteface = nameof(Microsoft.Extensions.DependencyInjection.IServiceScopeFactory);
+    internal const string IServiceScopeFactoryTypeFullName = $"{global}{msdiNs}.{serviceScopeFactoryInteface}";
+
+    internal const string serviceProviderIsServiceInteface = nameof(Microsoft.Extensions.DependencyInjection.IServiceProviderIsService);
+    internal const string IServiceProviderIsServiceTypeFullName = $"{global}{msdiNs}.{serviceProviderIsServiceInteface}";
+#endif
+
     internal const string registrarInterface = "IThunderboltRegistrar";
     internal const string IRegistrarTypeFullName = $"{global}{mainNs}.{registrarInterface}";
 
     internal const string dictatorInterface = "IThunderboltFactoryDictator";
     internal const string IDictatorTypeFullName = $"{global}{mainNs}.{dictatorInterface}";
 
-    #endregion
+#endregion
 
 
     #region Classes
